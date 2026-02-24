@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import "@/app/css/globals.css";
+import "@/css/globals.css";
 import Script from "next/script";
 import { CONFIG } from "@/config/config";
 

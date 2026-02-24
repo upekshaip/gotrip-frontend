@@ -6,10 +6,11 @@ import { routes } from "@/config/routes";
 
 export const login = async (email, password) => {
   if (!email || !password) {
-    return redirect(`${routes.out.login}?error=Missing email or password`);
+    return redirect(`${routes.out.login.url}?error=Missing email or password`);
   }
 
   const api = process.env.NEXT_PUBLIC_API_URL;
+  console.log(api);
   const response = await fetch(`${api}/auth/login`, {
     method: "POST",
     headers: {
@@ -27,27 +28,28 @@ export const login = async (email, password) => {
   if (!response.ok) {
     const msg = await response.json();
     console.error("Login failed:", msg);
-    return redirect(`${routes.out.login}?error=${msg.message}`);
+    return redirect(`${routes.out.login.url}?error=${msg.message}`);
   }
   if (response.ok) {
-    const userData = await response.json();
+    let userData = await response.json();
     // return userData;
-    const { refreshToken, ...userWithoutToken } = userData;
-    const userRole = userData.isAdmin
-      ? "admin"
-      : userData.isTeacher
-        ? "teacher"
-        : "student";
+    const { refreshToken, accessToken, user } = userData;
 
-    await setJWT(refreshToken, userData.accessToken, {
-      ...userWithoutToken,
+    const userRole = user.admin
+      ? "admin"
+      : user.serviceProvider
+        ? "serviceProvider"
+        : "traveller";
+
+    await setJWT(refreshToken, accessToken, {
+      ...{ ...user, accessToken },
       role: userRole,
       viewAs: userRole,
     });
 
     const result = await signIn("credentials", {
       userData: JSON.stringify({
-        ...userWithoutToken,
+        ...{ ...user, accessToken },
         role: userRole,
         id: userData.userId,
       }),
@@ -58,7 +60,7 @@ export const login = async (email, password) => {
 
 export const signup = async (email, password) => {
   if (!email || !password) {
-    return redirect(`${routes.out.login}?error=Missing email or password`);
+    return redirect(`${routes.out.signup.url}?error=Missing email or password`);
   }
 
   const api = process.env.NEXT_PUBLIC_API_URL;
@@ -79,7 +81,7 @@ export const signup = async (email, password) => {
   if (!response.ok) {
     const msg = await response.json();
     console.error("Signup failed:", msg);
-    return redirect(`${routes.out.signup}?error=${msg.message}`);
+    return redirect(`${routes.out.signup.url}?error=${msg.message}`);
   }
   if (response.ok) {
     const userData = await response.json();

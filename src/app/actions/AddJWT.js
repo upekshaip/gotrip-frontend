@@ -28,11 +28,11 @@ export const setJWT = async (refreshToken, accessToken, userData) => {
   }
   // set user cookie to indicate logged in status
   if (!userData.role) {
-    const role = userData.isAdmin
+    const role = userData.admin
       ? "admin"
-      : userData.isTeacher
-        ? "teacher"
-        : "student";
+      : userData.serviceProvider
+        ? "serviceProvider"
+        : "traveller";
     userData.role = role;
   }
   if (!userData.viewAs) {

@@ -5,10 +5,7 @@ import { redirect } from "next/navigation";
 const TravellerLayout = async ({ children }) => {
   const session = await auth();
   if (!session?.user) {
-    redirect(routes.out.login);
-  }
-  if (!session.user.isTeacher && !session.user.isAdmin) {
-    redirect(routes.student.dashboard);
+    redirect(routes.out.login.url);
   }
   return <>{children}</>;
 };
