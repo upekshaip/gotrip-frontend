@@ -1,0 +1,117 @@
+"use server";
+import { signIn } from "@/auth";
+import { setJWT } from "@/app/actions/AddJWT";
+import { redirect } from "next/navigation";
+import { routes } from "@/config/routes";
+
+export const login = async (email, password) => {
+  if (!email || !password) {
+    return redirect(`${routes.out.login}?error=Missing email or password`);
+  }
+
+  const api = process.env.NEXT_PUBLIC_API_URL;
+  const response = await fetch(`${api}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    mode: "cors",
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const msg = await response.json();
+    console.error("Login failed:", msg);
+    return redirect(`${routes.out.login}?error=${msg.message}`);
+  }
+  if (response.ok) {
+    const userData = await response.json();
+    // return userData;
+    const { refreshToken, ...userWithoutToken } = userData;
+    const userRole = userData.isAdmin
+      ? "admin"
+      : userData.isTeacher
+        ? "teacher"
+        : "student";
+
+    await setJWT(refreshToken, userData.accessToken, {
+      ...userWithoutToken,
+      role: userRole,
+      viewAs: userRole,
+    });
+
+    const result = await signIn("credentials", {
+      userData: JSON.stringify({
+        ...userWithoutToken,
+        role: userRole,
+        id: userData.userId,
+      }),
+    });
+    console.log(result);
+  }
+};
+
+export const signup = async (email, password) => {
+  if (!email || !password) {
+    return redirect(`${routes.out.login}?error=Missing email or password`);
+  }
+
+  const api = process.env.NEXT_PUBLIC_API_URL;
+  const response = await fetch(`${api}/auth/signup`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    mode: "cors",
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const msg = await response.json();
+    console.error("Signup failed:", msg);
+    return redirect(`${routes.out.signup}?error=${msg.message}`);
+  }
+  if (response.ok) {
+    const userData = await response.json();
+    // return userData;
+    const { refreshToken, ...userWithoutToken } = userData;
+    const userRole = userData.isAdmin
+      ? "admin"
+      : userData.isTeacher
+        ? "teacher"
+        : "student";
+
+    await setJWT(refreshToken, userData.accessToken, {
+      ...userWithoutToken,
+      role: userRole,
+      viewAs: userRole,
+    });
+
+    const result = await signIn("credentials", {
+      userData: JSON.stringify({
+        ...userWithoutToken,
+        role: userRole,
+        id: userData.userId,
+      }),
+    });
+    console.log(result);
+  }
+};
+
+export const formSignUp = async (email, password) => {
+  await signup(email, password);
+};
+
+export const formLogin = async (email, password) => {
+  await login(email, password);
+};
