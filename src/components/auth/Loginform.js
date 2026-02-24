@@ -24,7 +24,9 @@ const LoginForm = () => {
     try {
       await formLogin(email, password);
     } catch (err) {
-      setError(err.message || t("somethingWentWrong"));
+      setError(
+        err.message || "An unexpected error occurred. Please try again.",
+      );
     } finally {
       setLoading(false);
     }

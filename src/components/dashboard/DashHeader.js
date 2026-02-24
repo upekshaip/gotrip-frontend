@@ -1,3 +1,4 @@
+"use client";
 import { Menu } from "lucide-react";
 import { logoutFrontend } from "@/hooks/Logout";
 import { useRouter } from "next/navigation";
@@ -5,9 +6,11 @@ import Image from "next/image";
 import NotificationDropdown from "./Notificationdropdown";
 import RoleSwitchToggle from "@/components/toggles/RoleSwitchToggle";
 import { User, Bell, LogOut } from "lucide-react";
+import { getUserData } from "@/hooks/UseUserInfo";
 
 export default function DashHeader({ toggleSidebar, activeItem }) {
   const router = useRouter();
+  const user = getUserData();
 
   const handleLogout = () => {
     logoutFrontend();
@@ -39,8 +42,8 @@ export default function DashHeader({ toggleSidebar, activeItem }) {
           >
             <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
               <Image
-                src={`https://ui-avatars.com/api/?name=user`}
-                alt={"User"}
+                src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=random&bold=true`}
+                alt={"User Avatar"}
                 width={50}
                 height={50}
                 unoptimized

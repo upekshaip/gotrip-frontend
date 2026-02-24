@@ -34,11 +34,11 @@ export default function SignupPage() {
       return false;
     }
     if (password.length < 5) {
-      setError(t("passwordLengthError"));
+      setError("passwordLengthError");
       return false;
     }
     if (password !== confirmPassword) {
-      setError(t("passwordMismatch"));
+      setError("passwordMismatch");
       return false;
     }
     setError("");

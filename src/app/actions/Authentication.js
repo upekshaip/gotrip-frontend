@@ -86,22 +86,22 @@ export const signup = async (email, password) => {
   if (response.ok) {
     const userData = await response.json();
     // return userData;
-    const { refreshToken, ...userWithoutToken } = userData;
-    const userRole = userData.isAdmin
+    const { refreshToken, accessToken, user } = userData;
+    const userRole = user.admin
       ? "admin"
-      : userData.isTeacher
-        ? "teacher"
-        : "student";
+      : userData.serviceProvider
+        ? "serviceProvider"
+        : "traveller";
 
-    await setJWT(refreshToken, userData.accessToken, {
-      ...userWithoutToken,
+    await setJWT(refreshToken, accessToken, {
+      ...{ ...user, accessToken },
       role: userRole,
       viewAs: userRole,
     });
 
     const result = await signIn("credentials", {
       userData: JSON.stringify({
-        ...userWithoutToken,
+        ...{ ...user, accessToken },
         role: userRole,
         id: userData.userId,
       }),
