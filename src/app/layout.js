@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/css/globals.css";
 import Script from "next/script";
 import { CONFIG } from "@/config/config";
+import DashSpeedDial from "@/components/dashboard/DashSpeedDial";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased mx-auto`}
       >
-        <main>{children}</main>
+        <main>
+          {children}
+          <DashSpeedDial />
+        </main>
       </body>
     </html>
   );

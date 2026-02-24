@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 const AdminLayout = async ({ children }) => {
   const session = await auth();
   if (!session?.user) {
-    redirect(routes.out.login);
+    redirect(routes.out.login.url);
   }
-  if (!session.user.isAdmin) {
-    redirect(routes.student.dashboard);
+  if (!session.user.admin) {
+    redirect(routes.serviceProvider.dashboard.url);
   }
   return <>{children}</>;
 };

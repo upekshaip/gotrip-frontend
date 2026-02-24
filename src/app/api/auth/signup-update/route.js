@@ -1,4 +1,4 @@
-import { setJWT } from "@/app/actions/addJWT";
+import { setJWT } from "@/app/actions/AddJWT";
 import { auth, unstable_update } from "@/auth";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -21,7 +21,6 @@ export const PATCH = async (request) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
     {
@@ -38,7 +37,7 @@ export const PATCH = async (request) => {
         gender: userData.gender,
         dob: userData.dob,
         // address is optional
-        address: userData.address ? userData.address : undefined,
+        // address: userData.address ? userData.address : undefined,
       }),
       credentials: "include",
     },
@@ -54,15 +53,16 @@ export const PATCH = async (request) => {
       },
     );
   }
+  const { accessToken, user } = userData;
 
   const updatedSession = await unstable_update({
     name: userData.name,
     phone: userData.phone,
     gender: userData.gender,
     dob: userData.dob,
-    address: userData.address ? userData.address : undefined,
+    // address: userData.address ? userData.address : undefined,
   });
-  await setJWT(null, null, updatedSession.user);
+  await setJWT(null, accessToken, updatedSession.user);
 
   return new NextResponse(JSON.stringify(responseData), {
     status: 200,

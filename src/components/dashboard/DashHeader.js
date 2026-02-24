@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 import { Menu } from "lucide-react";
 import { logoutFrontend } from "@/hooks/Logout";
@@ -7,9 +8,18 @@ import NotificationDropdown from "./Notificationdropdown";
 import RoleSwitchToggle from "@/components/toggles/RoleSwitchToggle";
 import { User, Bell, LogOut } from "lucide-react";
 import { getUserData } from "@/hooks/UseUserInfo";
+import { useEffect, useState } from "react";
 
 export default function DashHeader({ toggleSidebar, activeItem }) {
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  if (!isMounted) {
+    return null;
+  }
   const user = getUserData();
 
   const handleLogout = () => {
@@ -42,11 +52,11 @@ export default function DashHeader({ toggleSidebar, activeItem }) {
           >
             <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
               <Image
-                src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=random&bold=true`}
-                alt={"User Avatar"}
-                width={50}
-                height={50}
-                unoptimized
+                alt="User Avatar"
+                className="w-full h-full object-cover rounded-full"
+                src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=random&bold=true&format=png`}
+                width={40}
+                height={40}
               />
             </div>
           </div>

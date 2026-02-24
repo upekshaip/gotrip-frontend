@@ -97,7 +97,6 @@ export default function DashLayout({ children, role }) {
 
         <main className="flex-1 overflow-y-auto px-4 space-y-6">
           {children}
-          <DashSpeedDial />
         </main>
       </div>
     </div>

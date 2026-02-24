@@ -1,44 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Eye, EyeOff, MessageCircleWarning } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  MessageCircleWarning,
+  ArrowRight,
+} from "lucide-react";
 import { formSignUp } from "@/app/actions/Authentication";
 import { useSearchParams } from "next/navigation";
 
-export default function SignupPage() {
+const SignupForm = () => {
   const searchParams = useSearchParams();
   const myError = searchParams.get("error");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Step 1 - Account Creation
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    if (myError) {
-      setError(myError);
-    }
+    if (myError) setError(myError);
   }, [myError]);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError(t("validEmailError"));
+      setError("Please enter a valid email address.");
       return false;
     }
     if (password.length < 5) {
-      setError("passwordLengthError");
+      setError("Password must be at least 5 characters.");
       return false;
     }
     if (password !== confirmPassword) {
-      setError("passwordMismatch");
+      setError("Passwords do not match.");
       return false;
     }
     setError("");
@@ -51,137 +54,154 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await formSignUp(email, password);
-      setError("");
     } catch (err) {
-      setError(err.message || "somethingWentWrong");
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-base-200 flex items-center justify-center p-4">
-      <div className="bg-base-100 p-8 rounded-2xl shadow-md w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold mb-2">{"createAccount"}</h1>
-          <p className="text-base-content/60 text-sm">{"registration"}</p>
-        </div>
+    <div className="w-full">
+      <div className="mb-6 text-center md:text-left">
+        <h2 className="text-2xl font-black tracking-tight mb-1 text-base-content">
+          Create Account
+        </h2>
+        <p className="text-base-content/40 font-bold uppercase text-[10px] tracking-[0.15em]">
+          Join the goTrip community
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
-          <div className="form-control">
-            <label className="label pb-1">
-              <span className="label-text text-base-content font-medium">
-                {"emailAddress"}
-              </span>
-            </label>
+      <form className="space-y-3" onSubmit={handleSubmit}>
+        {/* Email */}
+        <div className="form-control">
+          <label className="label py-1">
+            <span className="label-text text-xs font-bold opacity-70">
+              Email Address
+            </span>
+          </label>
+          <label className="input input-bordered h-11 flex items-center gap-3 bg-base-200/50 border-none shadow-sm focus-within:ring-2 ring-secondary/20 transition-all">
+            <Mail size={16} className="text-secondary" />
             <input
               type="email"
+              className="grow text-sm font-medium"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={"enterEmail"}
-              className="input input-bordered w-full rounded-xl h-11 text-base"
-              required
               disabled={loading}
+              required
             />
+          </label>
+        </div>
+
+        {/* Password */}
+        <div className="form-control">
+          <label className="label py-1">
+            <span className="label-text text-xs font-bold opacity-70">
+              Password
+            </span>
+          </label>
+          <label className="input input-bordered h-11 flex items-center gap-3 bg-base-200/50 border-none shadow-sm focus-within:ring-2 ring-secondary/20 transition-all">
+            <Lock size={16} className="text-secondary" />
+            <input
+              type={showPassword ? "text" : "password"}
+              className="grow text-sm font-medium"
+              placeholder="Min. 5 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff size={16} className="opacity-40" />
+              ) : (
+                <Eye size={16} className="opacity-40" />
+              )}
+            </button>
+          </label>
+        </div>
+
+        {/* Confirm Password */}
+        <div className="form-control">
+          <label className="label py-1">
+            <span className="label-text text-xs font-bold opacity-70">
+              Confirm Password
+            </span>
+          </label>
+          <label className="input input-bordered h-11 flex items-center gap-3 bg-base-200/50 border-none shadow-sm focus-within:ring-2 ring-secondary/20 transition-all">
+            <Lock size={16} className="text-secondary" />
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              className="grow text-sm font-medium"
+              placeholder="Repeat password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <EyeOff size={16} className="opacity-40" />
+              ) : (
+                <Eye size={16} className="opacity-40" />
+              )}
+            </button>
+          </label>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="alert alert-error bg-error/10 border-none rounded-xl py-2 mt-2">
+            <MessageCircleWarning className="w-4 h-4 text-error" />
+            <span className="text-[11px] font-bold text-error uppercase tracking-wider">
+              {error}
+            </span>
           </div>
+        )}
 
-          {/* Password */}
-          <div className="form-control">
-            <label className="label pb-1">
-              <span className="label-text text-base-content font-medium">
-                {"password"}
-              </span>
-            </label>
-
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={"createPassword"}
-                className="input input-bordered w-full rounded-xl h-11 pr-12"
-                required
-                disabled={loading}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={loading}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60 hover:text-base-content"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div className="form-control">
-            <label className="label pb-1">
-              <span className="label-text text-base-content font-medium">
-                {"confirmPassword"}
-              </span>
-            </label>
-
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={"confirmPasswordPlaceholder"}
-                className="input input-bordered w-full rounded-xl h-11 pr-12"
-                required
-                disabled={loading}
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                disabled={loading}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60 hover:text-base-content"
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="alert alert-error rounded-xl py-2 text-sm">
-              <MessageCircleWarning className="w-5 h-5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Submit button */}
+        {/* Submit Button */}
+        <div className="pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary w-full rounded-xl mt-4"
+            className="btn btn-secondary btn-block min-h-0 h-12 text-white rounded-xl shadow-lg shadow-secondary/30 group hover:scale-[1.01] active:scale-95 transition-all text-sm font-bold uppercase tracking-wider"
           >
             {loading ? (
-              <>
-                <span className="loading loading-spinner loading-sm"></span>
-                {"creatingAccount"}
-              </>
+              <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "nextStep"
+              <>
+                Next Step
+                <ArrowRight
+                  size={18}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </>
             )}
           </button>
-        </form>
-
-        {/* Footer */}
-        <div className="text-center mt-6 pt-4 border-t border-base-300">
-          <p className="text-sm text-base-content/60">
-            {"alreadyHaveAccount"}{" "}
-            <Link href="/login" className="link link-primary font-medium">
-              {"login"}
-            </Link>
-          </p>
         </div>
+      </form>
+
+      {/* Footer */}
+      <div className="mt-8 text-center">
+        <p className="text-xs font-medium text-base-content/50 uppercase tracking-widest">
+          Already a traveler?{" "}
+          <Link
+            href="/login"
+            className="text-secondary font-black hover:underline underline-offset-4"
+          >
+            Sign In
+          </Link>
+        </p>
       </div>
     </div>
   );
-}
+};
+
+export default SignupForm;

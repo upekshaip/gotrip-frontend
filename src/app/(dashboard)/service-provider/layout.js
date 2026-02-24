@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 const ServiceProviderLayout = async ({ children }) => {
   const session = await auth();
   if (!session?.user) {
-    redirect(routes.out.login);
+    redirect(routes.out.login.url);
   }
   if (!session.user.isServiceProvider) {
-    redirect(routes.student.dashboard);
+    redirect(routes.traveller.dashboard.url);
   }
   return <>{children}</>;
 };

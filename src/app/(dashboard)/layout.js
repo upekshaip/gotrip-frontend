@@ -8,6 +8,13 @@ const DashboardLayout = async ({ children }) => {
   if (!session?.user) {
     redirect(routes.out.login.url);
   }
+  if (
+    session.user.name === null &&
+    session.user.phone === null &&
+    session.user.dob === null
+  ) {
+    redirect(routes.traveller.welcome.url);
+  }
 
   return <DashLayout role={session.user.role}>{children}</DashLayout>;
 };

@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
-import SignupPage from "@/components/auth/Signupform";
+import AuthTemplate from "@/components/auth/AuthTemplate";
+import SignupForm from "@/components/auth/Signupform";
 import { routes } from "@/config/routes";
+import { Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default async function Signup() {
@@ -19,8 +21,23 @@ export default async function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200 relative">
-      <SignupPage role="traveller" mode="signup" />
-    </div>
+    <AuthTemplate
+      title="Join the"
+      subtitle="Journey."
+      description="Create an account and start exploring the world today. Your adventure begins with a single click."
+      accentColor="secondary" // Purple/Secondary theme for Signup
+      sideContent={
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/20 rounded-lg">
+            <Sparkles size={18} />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+            Exclusive Traveler Perks
+          </p>
+        </div>
+      }
+    >
+      <SignupForm />
+    </AuthTemplate>
   );
 }
