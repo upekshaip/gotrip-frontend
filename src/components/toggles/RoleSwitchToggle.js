@@ -1,73 +1,75 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { getUserData, storeUserData } from "@/hooks/UseUserInfo";
+import {
+  getUserData,
+  storeViewAs,
+  storeUserData,
+  getViewAs,
+} from "@/hooks/UseUserInfo";
 import { UserCog } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 
 const RoleSwitchToggle = () => {
   const pathname = usePathname();
-  const [newRole, setNewRole] = useState(() => {
-    const userData = getUserData();
-    console.log(userData);
-    const currentPath = pathname;
-    if (currentPath.startsWith("/admin") && userData?.role === "admin") {
-      return "admin";
-    }
-    if (
-      currentPath.startsWith("/service-provider") &&
-      (userData?.role === "serviceProvider" || userData?.role === "admin")
-    ) {
-      return "serviceProvider";
-    }
-    if (
-      currentPath.startsWith("/traveller") &&
-      (userData?.role === "traveller" ||
-        userData?.role === "serviceProvider" ||
-        userData?.role === "admin")
-    ) {
-      return "traveller";
-    }
-    return userData?.viewAs || "traveller";
-  });
   const router = useRouter();
+  const [currentView, setCurrentView] = useState("traveller");
+
+  useEffect(() => {
+    // 1. Get the data from cookies
+    const _user = JSON.parse(JSON.stringify(getUserData()));
+
+    // 2. Determine the view based on the current path
+    let view = _user?.role || "traveller";
+    if (pathname.startsWith("/admin") && _user?.role === "admin")
+      view = "admin";
+    else if (
+      pathname.startsWith("/service-provider") &&
+      (_user?.role === "serviceProvider" || _user?.role === "admin")
+    )
+      view = "serviceProvider";
+    else if (pathname.startsWith("/traveller")) view = "traveller";
+
+    setCurrentView(view);
+    storeViewAs(view);
+  }, [pathname]);
+
   const switchRole = async () => {
     const userData = getUserData();
     if (!userData) return;
 
-    //  if userData.role is admin, can switch to teacher and student
-    // if userData.role is teacher, can switch to student (and back to teacher)
-    // if userData.role is student, can only be student
-    // needs to rotate through available roles based on original role
     let nextRole = "";
-    if (userData.role === "admin") {
+    let newRole = getViewAs();
+
+    if (userData.admin === true || userData.role === "admin") {
       if (newRole === "admin") nextRole = "serviceProvider";
       else if (newRole === "serviceProvider") nextRole = "traveller";
       else nextRole = "admin";
     } else if (userData.role === "serviceProvider") {
-      if (newRole === "serviceProvider") nextRole = "traveller";
-      else nextRole = "serviceProvider";
+      nextRole =
+        newRole === "serviceProvider" ? "traveller" : "serviceProvider";
     } else {
       nextRole = "traveller";
     }
-    console.log(nextRole);
-    storeUserData({ ...userData, viewAs: nextRole });
-    setNewRole(nextRole);
-    const result = nextRole
-      .replace(/([a-z])([A-Z])/g, "$1-$2") // Insert hyphen between lowercase and uppercase
+    storeViewAs(nextRole);
+
+    const urlSegment = nextRole
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
       .toLowerCase();
-    router.push(`/${result}`);
+
+    router.push(`/${urlSegment}`);
   };
 
   return (
     <button
-      onClick={async () => await switchRole()}
-      // disabled={loading}
-      className="btn btn-ghost btn-sm hover:bg-primary/20"
+      onClick={switchRole}
+      className="btn btn-ghost btn-sm hover:bg-primary/20 flex items-center gap-2"
     >
       <UserCog className="w-5 h-5" />
-      <span className="capitalize">{newRole}</span>
+      <span className="capitalize">
+        {currentView.replace(/([A-Z])/g, " $1")}
+      </span>
     </button>
   );
 };

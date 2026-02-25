@@ -14,8 +14,9 @@ export const storeUserData = (userData) => {
   Cookies.set("user", encodeURIComponent(encrypted), {
     path: "/",
     expires: 1, // 1 day (you can change this)
-    sameSite: "Lax",
+    // sameSite: "Lax",
   });
+  return getUserData();
 };
 
 export const getUserData = () => {
@@ -34,4 +35,14 @@ export const getUserData = () => {
     console.error("User decryption failed", e);
     return null;
   }
+};
+
+export const storeViewAs = (viewAs) => {
+  localStorage.setItem("viewAs", viewAs || "traveller");
+};
+
+export const getViewAs = () => {
+  if (typeof window === "undefined") return "traveller";
+  const value = localStorage.getItem("viewAs");
+  return value ? value : "traveller";
 };

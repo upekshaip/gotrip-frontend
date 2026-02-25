@@ -5,8 +5,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import DashSidebar from "@/components/dashboard/DashSidebar";
 import DashHeader from "@/components/dashboard/DashHeader";
 import { usePathname } from "next/navigation";
-import DashSpeedDial from "./DashSpeedDial";
-import { getUserData } from "@/hooks/UseUserInfo";
+import { getUserData, getViewAs, storeViewAs } from "@/hooks/UseUserInfo";
 import { Toaster } from "react-hot-toast";
 import { routes } from "@/config/routes";
 
@@ -15,48 +14,39 @@ export default function DashLayout({ children, role }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
-  // Use a hook or state to get user data
-  const userData = getUserData();
+  const [viewAs, setViewAs] = useState(() => {
+    const _viewAs = getViewAs();
+    return _viewAs;
+  });
+  const [menuItems, setMenuItems] = useState([]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  // 1. Correctly compute menuItems as an Array
-  const menuItems = useMemo(() => {
-    if (!isMounted || !userData?.viewAs) {
-      return Object.values(routes.common || {});
-    }
-    let selectedRoutes = {};
 
-    // if the URL is a common route, then do not change the menu items
-    let commonRoutes = Object.values(routes.common);
-    commonRoutes = commonRoutes.map((route) => route.url);
-    if (commonRoutes.some((url) => pathname.startsWith(url))) {
-      selectedRoutes = routes[userData.viewAs];
-    } else {
-      // Determine base routes based on URL
-      if (pathname.startsWith("/admin")) {
-        selectedRoutes = routes.admin;
-      } else if (pathname.startsWith("/service-provider")) {
-        selectedRoutes = routes.serviceProvider;
-      } else if (pathname.startsWith("/traveller")) {
-        // Default to traveller
-        selectedRoutes = routes.traveller;
-      }
-    }
+  useEffect(() => {
+    const user = getUserData();
 
-    // Merge with common routes and convert Object values to an Array
-    // This prevents the ".filter is not a function" error
-    const combined = { ...selectedRoutes, ...routes.common };
-    return Object.values(combined);
-  }, [pathname, userData]);
+    if (pathname.startsWith("/admin") && user?.role === "admin")
+      setViewAs("admin");
+    else if (
+      pathname.startsWith("/service-provider") &&
+      (user?.role === "serviceProvider" || user?.role === "admin")
+    )
+      setViewAs("serviceProvider");
+    else if (pathname.startsWith("/traveller")) setViewAs("traveller");
+    storeViewAs(viewAs);
 
-  // 2. Sync Active Item whenever pathname or menuItems change
+    const myMenu = Object.values({ ...routes[getViewAs()], ...routes.common });
+    setMenuItems(myMenu);
+    console.log(typeof myMenu);
+  }, [pathname, viewAs]);
+
   useEffect(() => {
     if (menuItems && Array.isArray(menuItems)) {
       const active = menuItems
-        .filter((item) => item.url) // Ensure item has a URL property
-        .sort((a, b) => (b.url?.length || 0) - (a.url?.length || 0)) // Longest match first
+        .filter((item) => item.url)
+        .sort((a, b) => (b.url?.length || 0) - (a.url?.length || 0))
         .find((item) => pathname.startsWith(item.url));
 
       if (active) {
@@ -69,7 +59,7 @@ export default function DashLayout({ children, role }) {
     setIsOpen(!isOpen);
   };
   if (!isMounted) {
-    return null; // Or a simple non-dynamic skeleton
+    return null;
   }
 
   return (
