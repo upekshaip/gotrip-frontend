@@ -37,6 +37,15 @@ export const getUserData = () => {
   }
 };
 
+export const storeAccessToken = (token) => {
+  Cookies.set("accessToken", token, {
+    path: "/",
+    expires: 1,
+    sameSite: "Lax",
+    secure: true,
+  });
+};
+
 export const storeViewAs = (viewAs) => {
   localStorage.setItem("viewAs", viewAs || "traveller");
 };

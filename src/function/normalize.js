@@ -21,3 +21,7 @@ export const normalizeSriLankaTime = (utcDate) => {
     hour12: true,
   }).format(new Date(utcDate));
 };
+
+export const normalizeRoles = (role) => {
+  return role.replace(/([A-Z])/g, " $1");
+};

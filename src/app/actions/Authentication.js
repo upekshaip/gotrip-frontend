@@ -10,7 +10,7 @@ export const login = async (email, password) => {
   }
 
   const api = process.env.NEXT_PUBLIC_API_URL;
-  console.log(api);
+
   const response = await fetch(`${api}/auth/login`, {
     method: "POST",
     headers: {
@@ -41,8 +41,6 @@ export const login = async (email, password) => {
         ? "serviceProvider"
         : "traveller";
 
-    console.log("user's role:", userRole, user);
-
     await setJWT(refreshToken, accessToken, {
       ...{ ...user, accessToken },
       role: userRole,
@@ -56,7 +54,6 @@ export const login = async (email, password) => {
         id: userData.userId,
       }),
     });
-    console.log(result);
   }
 };
 
@@ -108,7 +105,6 @@ export const signup = async (email, password) => {
         id: userData.userId,
       }),
     });
-    console.log(result);
   }
 };
 

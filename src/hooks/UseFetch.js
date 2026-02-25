@@ -3,6 +3,7 @@
 import { logoutFrontend } from "@/hooks/Logout";
 import { getUserData } from "@/hooks/UseUserInfo";
 import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 const getCookie = (name) => {
   const token = Cookies.get(name);
@@ -19,7 +20,7 @@ const UseFetch = async (method, path, data) => {
         Authorization: `Bearer ${getCookie("accessToken")}`,
       },
       body: method !== "GET" ? JSON.stringify(data) : undefined,
-      credentials: "include",
+      // credentials: "include",
     };
     const response = await fetch(api, options);
     if (response.ok) {
@@ -37,7 +38,7 @@ const UseFetch = async (method, path, data) => {
         if (!userData) {
           logoutFrontend();
         }
-        const newAccessToken = await fetch(`/api/auth/refresh`, {
+        const newAccessToken = await fetch(`api/auth/refresh`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -53,8 +54,9 @@ const UseFetch = async (method, path, data) => {
           if (originalRequest.ok) {
             return await originalRequest.json();
           } else {
-            // throw new Error("Original request failed after token refresh");
-            console.error("Original request failed after token refresh");
+            toast.error("Failed to refresh token. Logging out...");
+            throw new Error("Original request failed after token refresh");
+            // console.error("Original request failed after token refresh");
           }
         } else {
           console.log(await newAccessToken.json());
@@ -66,6 +68,7 @@ const UseFetch = async (method, path, data) => {
     return await response.json();
   } catch (err) {
     console.error("Fetch error:", err);
+    toast.error("An error occurred while fetching data. Please try again.");
     throw err;
   }
 };

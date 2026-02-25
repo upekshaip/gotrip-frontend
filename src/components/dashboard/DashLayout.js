@@ -97,7 +97,7 @@ export default function DashLayout({ children, role }) {
 
         <DashHeader toggleSidebar={toggleSidebar} activeItem={activeItem} />
 
-        <main className="flex-1 overflow-y-auto px-4 space-y-6">
+        <main className="flex-1 overflow-y-auto px-4 mt-4 space-y-6">
           {children}
         </main>
       </div>

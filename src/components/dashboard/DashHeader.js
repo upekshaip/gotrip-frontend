@@ -9,6 +9,7 @@ import RoleSwitchToggle from "@/components/toggles/RoleSwitchToggle";
 import { User, Bell, LogOut } from "lucide-react";
 import { getUserData } from "@/hooks/UseUserInfo";
 import { useEffect, useState } from "react";
+import ProfileImage from "../reusable/ProfileImage";
 
 export default function DashHeader({ toggleSidebar, activeItem }) {
   const [isMounted, setIsMounted] = useState(false);
@@ -51,13 +52,7 @@ export default function DashHeader({ toggleSidebar, activeItem }) {
             className="btn btn-ghost btn-circle avatar"
           >
             <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-              <Image
-                alt="User Avatar"
-                className="w-full h-full object-cover rounded-full"
-                src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=random&bold=true&format=png`}
-                width={40}
-                height={40}
-              />
+              <ProfileImage name={user?.name} />
             </div>
           </div>
 

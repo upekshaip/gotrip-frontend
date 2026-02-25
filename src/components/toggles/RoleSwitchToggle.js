@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { normalizeRoles } from "@/function/normalize";
 import {
   getUserData,
   storeViewAs,
@@ -67,9 +68,7 @@ const RoleSwitchToggle = () => {
       className="btn btn-ghost btn-sm hover:bg-primary/20 flex items-center gap-2"
     >
       <UserCog className="w-5 h-5" />
-      <span className="capitalize">
-        {currentView.replace(/([A-Z])/g, " $1")}
-      </span>
+      <span className="capitalize">{normalizeRoles(currentView)}</span>
     </button>
   );
 };

@@ -1,4 +1,4 @@
-import { setJWT } from "@/app/actions/addJWT";
+import { setJWT } from "@/app/actions/AddJWT";
 import { auth, unstable_update } from "@/auth";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -14,6 +14,7 @@ export const POST = async (request) => {
   }
 
   const myJWT = nextCookies.get("jwt");
+
   if (!myJWT) {
     return new NextResponse(JSON.stringify({ message: "Unauthorized" }), {
       status: 401,
@@ -31,7 +32,7 @@ export const POST = async (request) => {
         Cookie: `jwt=${myJWT.value}`,
       },
       body: JSON.stringify({ userId: session.user.userId }),
-      credentials: "include",
+      // credentials: "include",
     },
   );
 
