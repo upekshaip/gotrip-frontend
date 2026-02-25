@@ -151,26 +151,31 @@ const routes = {
       name: "Dashboard",
       url: "/admin",
       icon: <LayoutDashboard className="h-4 w-4" />,
+      menu: true,
     },
     travellerManagement: {
       name: "Traveller Management",
       url: "/admin/traveller-management",
       icon: <Users className="h-4 w-4" />,
+      menu: true,
     },
     serviceProviderManagement: {
       name: "Service Provider Management",
       url: "/admin/service-provider-management",
       icon: <Users className="h-4 w-4" />,
+      menu: true,
     },
     serviceManagement: {
       name: "Service Management",
       url: "/admin/service-management",
       icon: <FolderOpen className="h-4 w-4" />,
+      menu: true,
     },
     analytics: {
       name: "Analytics",
       url: "/admin/analytics",
       icon: <BarChart3 className="h-4 w-4" />,
+      menu: true,
     },
   },
 };
