@@ -14,33 +14,42 @@ export default function DashLayout({ children, role }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
-
+  const [isMounted, setIsMounted] = useState(false);
   // Use a hook or state to get user data
   const userData = getUserData();
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   // 1. Correctly compute menuItems as an Array
   const menuItems = useMemo(() => {
-    const userRole = userData?.role || role;
+    if (!isMounted || !userData?.viewAs) {
+      return Object.values(routes.common || {});
+    }
     let selectedRoutes = {};
 
-    // Determine base routes based on URL and Role
-    if (pathname.startsWith("/admin") && userRole === "admin") {
-      selectedRoutes = routes.admin;
-    } else if (
-      pathname.startsWith("/service-provider") &&
-      (userRole === "serviceProvider" || userRole === "admin")
-    ) {
-      selectedRoutes = routes.serviceProvider;
+    // if the URL is a common route, then do not change the menu items
+    let commonRoutes = Object.values(routes.common);
+    commonRoutes = commonRoutes.map((route) => route.url);
+    if (commonRoutes.some((url) => pathname.startsWith(url))) {
+      selectedRoutes = routes[userData.viewAs];
     } else {
-      // Default to traveller
-      selectedRoutes = routes.traveller;
+      // Determine base routes based on URL
+      if (pathname.startsWith("/admin")) {
+        selectedRoutes = routes.admin;
+      } else if (pathname.startsWith("/service-provider")) {
+        selectedRoutes = routes.serviceProvider;
+      } else if (pathname.startsWith("/traveller")) {
+        // Default to traveller
+        selectedRoutes = routes.traveller;
+      }
     }
 
     // Merge with common routes and convert Object values to an Array
     // This prevents the ".filter is not a function" error
     const combined = { ...selectedRoutes, ...routes.common };
     return Object.values(combined);
-  }, [pathname, userData, role]);
+  }, [pathname, userData]);
 
   // 2. Sync Active Item whenever pathname or menuItems change
   useEffect(() => {
@@ -59,6 +68,9 @@ export default function DashLayout({ children, role }) {
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+  if (!isMounted) {
+    return null; // Or a simple non-dynamic skeleton
+  }
 
   return (
     <div className="flex max-h-screen bg-base-200 min-w-0">

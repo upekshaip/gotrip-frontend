@@ -116,11 +116,13 @@ const routes = {
       name: "Dashboard",
       url: "/service-provider",
       icon: <LayoutDashboard className="h-4 w-4" />,
+      menu: true,
     },
     serviceManagement: {
       name: "Service Management",
       url: "/service-provider/service-management",
       icon: <FolderOpen className="h-4 w-4" />,
+      menu: true,
     },
     createService: {
       name: "Create Service",
@@ -136,6 +138,7 @@ const routes = {
       name: "My Services",
       url: "/service-provider/my-services",
       icon: <Map className="h-4 w-4" />,
+      menu: true,
     },
     analytics: {
       name: "Analytics",

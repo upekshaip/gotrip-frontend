@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PlaneTakeoff, Heart } from "lucide-react";
+import Logo from "../reusable/Logo";
 
 const AuthTemplate = ({
   children,
@@ -10,7 +11,6 @@ const AuthTemplate = ({
   description,
   sideContent,
   accentColor = "primary",
-  icon: Icon = PlaneTakeoff,
 }) => {
   const bgClass = `bg-${accentColor}`;
   const textClass = `text-${accentColor}-content`;
@@ -26,18 +26,9 @@ const AuthTemplate = ({
           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-current opacity-10 rounded-full blur-3xl"></div>
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-10">
-              {/* Icon Container with separate background and icon layers */}
-              <div className="relative p-2.5 flex items-center justify-center">
-                <div className="absolute inset-0 bg-current opacity-20 rounded-xl backdrop-blur-md"></div>
-                <Icon size={24} className="relative z-20" />{" "}
-                {/* Icon is now z-indexed above the bg */}
-              </div>
-              <span className="font-black tracking-tighter text-2xl italic">
-                goTrip
-              </span>
+            <div className="mb-8">
+              <Logo />
             </div>
-
             <h1 className="text-4xl font-black leading-[1.1] mb-6">
               {title} <br />
               <span className="opacity-70">{subtitle}</span>

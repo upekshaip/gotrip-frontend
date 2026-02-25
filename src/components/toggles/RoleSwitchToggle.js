@@ -10,6 +10,7 @@ const RoleSwitchToggle = () => {
   const pathname = usePathname();
   const [newRole, setNewRole] = useState(() => {
     const userData = getUserData();
+    console.log(userData);
     const currentPath = pathname;
     if (currentPath.startsWith("/admin") && userData?.role === "admin") {
       return "admin";
@@ -53,7 +54,10 @@ const RoleSwitchToggle = () => {
     console.log(nextRole);
     storeUserData({ ...userData, viewAs: nextRole });
     setNewRole(nextRole);
-    router.push(`/${nextRole}`);
+    const result = nextRole
+      .replace(/([a-z])([A-Z])/g, "$1-$2") // Insert hyphen between lowercase and uppercase
+      .toLowerCase();
+    router.push(`/${result}`);
   };
 
   return (

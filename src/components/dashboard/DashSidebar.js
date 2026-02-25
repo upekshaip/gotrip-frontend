@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { logoutFrontend } from "@/hooks/Logout";
 import clsx from "clsx";
+import Logo from "../reusable/Logo";
 
 export default function DashSidebar({
   isOpen,
@@ -47,7 +48,7 @@ export default function DashSidebar({
   };
 
   return (
-    <>
+    <div>
       <div
         className={clsx(`fixed top-0 left-0 h-screen w-68
     bg-base-100 backdrop-blur-xl md:bg-base-100 md:backdrop-blur-0
@@ -57,8 +58,8 @@ export default function DashSidebar({
     ${isOpen ? "translate-x-0" : "-translate-x-full"}
     md:translate-x-0 md:static md:block`)}
       >
-        <div className="flex justify-start items-center px-4 mb-4">
-          <h1 className="text-xl font-bold ml-2">DEAMOZ</h1>
+        <div className="flex justify-start items-center px-4 mb-6">
+          <Logo />
         </div>
         <ul className="menu text-sm space-y-2 w-full py-1 ml-2">
           {menuItems === null && (
@@ -110,6 +111,6 @@ export default function DashSidebar({
           onClick={toggleSidebar}
         ></div>
       )}
-    </>
+    </div>
   );
 }

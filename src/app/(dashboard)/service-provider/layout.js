@@ -7,7 +7,7 @@ const ServiceProviderLayout = async ({ children }) => {
   if (!session?.user) {
     redirect(routes.out.login.url);
   }
-  if (!session.user.isServiceProvider) {
+  if (!session.user.serviceProvider) {
     redirect(routes.traveller.dashboard.url);
   }
   return <>{children}</>;

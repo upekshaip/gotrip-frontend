@@ -41,6 +41,8 @@ export const login = async (email, password) => {
         ? "serviceProvider"
         : "traveller";
 
+    console.log("user's role:", userRole, user);
+
     await setJWT(refreshToken, accessToken, {
       ...{ ...user, accessToken },
       role: userRole,
