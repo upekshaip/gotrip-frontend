@@ -186,13 +186,15 @@ const routes = {
       order: 1,
       group: 2,
     },
-    hotelManagement: {
-      name: "Hotel Management",
-      url: "/service-provider/hotel-management",
-      icon: <Building2 className="h-4 w-4" />,
-      menu: true,
-      order: 1,
-      group: 2,
+    createHotel: {
+      name: "Create Hotel",
+      url: "/service-provider/hotel-management/create",
+      icon: <Plus className="h-4 w-4" />,
+    },
+    editHotel: {
+      name: "Edit Hotel",
+      url: "/service-provider/hotel-management/edit/:hotelId",
+      icon: <Edit className="h-4 w-4" />,
     },
     transportManagement: {
       name: "Transport Management",
@@ -201,16 +203,6 @@ const routes = {
       menu: true,
       order: 2,
       group: 2,
-    },
-    createHotel: {
-      name: "Create Hotel",
-      url: "/service-provider/hotel-management/create",
-      icon: <Plus className="h-4 w-4" />,
-    },
-    editHotel: {
-      name: "Edit Hotel",
-      url: "/service-provider/hotel-management/edit/:serviceId",
-      icon: <Edit className="h-4 w-4" />,
     },
     myServices: {
       name: "My Services",

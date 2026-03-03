@@ -38,14 +38,17 @@ const UseFetch = async (method, path, data) => {
         if (!userData) {
           logoutFrontend();
         }
-        const newAccessToken = await fetch(`api/auth/refresh`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getCookie("accessToken")}`,
+        const newAccessToken = await fetch(
+          `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/auth/refresh`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getCookie("accessToken")}`,
+            },
+            credentials: "include",
           },
-          credentials: "include",
-        });
+        );
         if (newAccessToken.ok) {
           const tokenData = await newAccessToken.json();
           // retry original request with new token
