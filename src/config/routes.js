@@ -21,6 +21,11 @@ import {
   Plus,
   Edit,
   Map,
+  Compass,
+  CalendarCheck,
+  Star,
+  ClipboardList,
+  Bike,
 } from "lucide-react";
 
 // Centralized route paths for students and teachers
@@ -110,6 +115,29 @@ const routes = {
       url: "/traveller/apply-for-service-provider",
       icon: <Plus className="h-4 w-4" />,
     },
+    experiences: {
+      name: "Experiences",
+      url: "/traveller/experiences",
+      icon: <Compass className="h-4 w-4" />,
+      menu: true,
+    },
+    experienceDetail: {
+      name: "Experience Detail",
+      url: "/traveller/experiences/:id",
+      icon: <Bike className="h-4 w-4" />,
+    },
+    myBookings: {
+      name: "My Bookings",
+      url: "/traveller/my-bookings",
+      icon: <CalendarCheck className="h-4 w-4" />,
+      menu: true,
+    },
+    myReviews: {
+      name: "My Reviews",
+      url: "/traveller/my-reviews",
+      icon: <Star className="h-4 w-4" />,
+      menu: true,
+    },
   },
   serviceProvider: {
     dashboard: {
@@ -144,6 +172,34 @@ const routes = {
       name: "Analytics",
       url: "/service-provider/analytics",
       icon: <BarChart3 className="h-4 w-4" />,
+    },
+    experiences: {
+      name: "Experiences",
+      url: "/service-provider/experiences",
+      icon: <Compass className="h-4 w-4" />,
+      menu: true,
+    },
+    createExperience: {
+      name: "Create Experience",
+      url: "/service-provider/experiences/create",
+      icon: <Plus className="h-4 w-4" />,
+    },
+    editExperience: {
+      name: "Edit Experience",
+      url: "/service-provider/experiences/edit/:id",
+      icon: <Edit className="h-4 w-4" />,
+    },
+    bookingRequests: {
+      name: "Booking Requests",
+      url: "/service-provider/booking-requests",
+      icon: <ClipboardList className="h-4 w-4" />,
+      menu: true,
+    },
+    experienceReviews: {
+      name: "Reviews",
+      url: "/service-provider/reviews",
+      icon: <Star className="h-4 w-4" />,
+      menu: true,
     },
   },
   admin: {
