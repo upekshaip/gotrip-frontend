@@ -14,11 +14,15 @@ import {
   BedDouble,
   Hash,
   AlertCircle,
+  Mail,
+  Phone,
+  User,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UseFetch from "@/hooks/UseFetch";
 
-const HotelBookings = () => {
+const HotelBookingRequests = () => {
   const [bookings, setBookings] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,6 +30,10 @@ const HotelBookings = () => {
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState(null);
+
+  // --- Provider Action States ---
+  const [providerResponses, setProviderResponses] = useState({});
+  const [processingId, setProcessingId] = useState(null);
 
   const observerTarget = useRef(null);
   const limit = 10;
@@ -38,7 +46,7 @@ const HotelBookings = () => {
 
       const response = await UseFetch(
         "GET",
-        `/hotel-booking/my-bookings?page=${page}&limit=${limit}`,
+        `/hotel-booking/incoming-requests?page=${page}&limit=${limit}`,
       );
 
       if (response.timestamp || response.error) {
@@ -60,8 +68,8 @@ const HotelBookings = () => {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError("Failed to load bookings.");
-      toast.error("Could not sync your bookings.");
+      setError("Failed to load requests.");
+      toast.error("Could not sync incoming requests.");
     } finally {
       setIsLoadingInitial(false);
       setIsFetchingMore(false);
@@ -96,6 +104,59 @@ const HotelBookings = () => {
     totalPages,
   ]);
 
+  // --- Handlers ---
+  const handleResponseChange = (bookingId, text) => {
+    setProviderResponses((prev) => ({
+      ...prev,
+      [bookingId]: text,
+    }));
+  };
+
+  const handleAction = async (bookingId, statusType) => {
+    const message = providerResponses[bookingId] || "";
+    setProcessingId(bookingId);
+
+    try {
+      const payload = {
+        message: message,
+        status: statusType, // "ACCEPT" or "DECLINED"
+      };
+
+      const response = await UseFetch(
+        "PATCH",
+        `/hotel-booking/${bookingId}/respond`,
+        payload,
+      );
+
+      if (response && !response.error && !response.timestamp) {
+        toast.success(
+          `Booking ${statusType === "ACCEPT" ? "accepted" : "declined"} successfully.`,
+        );
+
+        // Clear the text area for this specific booking
+        setProviderResponses((prev) => {
+          const newState = { ...prev };
+          delete newState[bookingId];
+          return newState;
+        });
+
+        // FIX: Clear bookings array to trigger the main loading spinner
+        setBookings([]);
+        setCurrentPage(1);
+        fetchBookings(1);
+      } else {
+        toast.error(
+          response.message || `Failed to ${statusType.toLowerCase()} booking.`,
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   // --- Formatters ---
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-LK", {
@@ -123,14 +184,14 @@ const HotelBookings = () => {
           border: "border-warning/20",
           icon: <Clock size={14} className="text-warning" />,
         };
-      case "CONFIRMED":
+      case "ACCEPTED":
         return {
           color: "text-success",
           bg: "bg-success/10",
           border: "border-success/20",
           icon: <CheckCircle2 size={14} className="text-success" />,
         };
-      case "CANCELLED":
+      case "DECLINED":
         return {
           color: "text-error",
           bg: "bg-error/10",
@@ -159,19 +220,19 @@ const HotelBookings = () => {
     return (
       <div className="flex flex-col items-center justify-center py-24 bg-base-200/30 border-2 border-dashed border-base-200 rounded-[2rem]">
         <Inbox className="opacity-10 mb-4" size={64} />
-        <p className="font-bold opacity-40">No bookings found.</p>
+        <p className="font-bold opacity-40">No incoming requests found.</p>
       </div>
     );
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-4 pb-8 relative">
       {bookings.map((item, index) => {
-        const { booking, hotelDetails } = item;
+        const { booking, hotelDetails, travellerInfo } = item;
         const statusStyle = getStatusStyles(booking.status);
+        const currentResponse = providerResponses[booking.bookingId] || "";
+        const isProcessingThis = processingId === booking.bookingId;
 
         return (
-          // DAISYUI COLLAPSE COMPONENT
-          // "collapse" gives the behavior, "collapse-arrow" adds the animated chevron
           <div
             key={`${booking.bookingId}-${index}`}
             tabIndex={0}
@@ -194,6 +255,9 @@ const HotelBookings = () => {
                   <h3 className="font-bold text-base truncate leading-none">
                     {hotelDetails?.name || "Hotel Booking"}
                   </h3>
+                  <span className="opacity-40 text-xs hidden md:inline">
+                    • {travellerInfo?.name}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -281,7 +345,7 @@ const HotelBookings = () => {
                   <div className="flex items-center gap-2 opacity-40 mb-1">
                     <BedDouble size={14} />
                     <span className="text-[10px] font-black uppercase">
-                      Details
+                      Accommodation
                     </span>
                   </div>
                   <div className="flex items-center gap-4 font-medium opacity-80">
@@ -325,25 +389,121 @@ const HotelBookings = () => {
                 </div>
               </div>
 
-              {/* Optional Message */}
+              {/* Guest Information Block */}
+              <div className="mt-6 p-4 bg-base-200/30 border border-base-200 rounded-xl">
+                <div className="flex items-center gap-2 opacity-60 mb-3">
+                  <User size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    Guest Information
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="opacity-50 text-xs mb-1">Name</p>
+                    <p className="font-medium">
+                      {travellerInfo?.name || "N/A"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail size={16} className="opacity-40" />
+                    <div>
+                      <p className="opacity-50 text-xs mb-1">Email</p>
+                      <p className="font-medium">
+                        {travellerInfo?.email || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="opacity-40" />
+                    <div>
+                      <p className="opacity-50 text-xs mb-1">Phone</p>
+                      <p className="font-medium">
+                        {travellerInfo?.phone || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Note */}
               {booking.requestMessage && (
-                <div className="">
-                  <p className="text-xs font-medium mt-4 mb-1">Your Note</p>
-                  <div className="text-xs italic opacity-60 bg-base-200/50 p-2 rounded border-l-2 border-primary">
+                <div className="mt-4">
+                  <p className="text-xs font-medium mb-1 opacity-60">
+                    Guest Note
+                  </p>
+                  <div className="text-sm italic opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-primary">
                     {booking.requestMessage}
                   </div>
                 </div>
               )}
-              {/* Optional Message */}
-              {booking.providerMessage && (
-                <div>
-                  <p className="text-xs font-medium mt-4 mb-1">
-                    Message from provider
-                  </p>
-                  <div className="text-xs italic opacity-60 bg-base-200/50 p-2 rounded border-l-2 border-success">
-                    {booking.providerMessage}
+
+              {/* Action Area (Only show inputs if PENDING) */}
+              {booking.status === "PENDING" ? (
+                <div className="mt-6 border-t border-base-200 pt-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="text-[10px] uppercase font-bold opacity-50 block mb-2 flex items-center gap-1">
+                        <MessageSquare size={12} /> Provider Response
+                      </label>
+                      <textarea
+                        className="textarea textarea-bordered w-full text-sm bg-base-200/20 focus:bg-base-100 min-h-[5rem]"
+                        placeholder="Add a message for the guest (e.g., check-in instructions or reason for decline)..."
+                        value={currentResponse}
+                        onChange={(e) =>
+                          handleResponseChange(
+                            booking.bookingId,
+                            e.target.value,
+                          )
+                        }
+                        disabled={isProcessingThis}
+                      />
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-row md:flex-col gap-2 justify-end md:w-48">
+                      <button
+                        className="btn btn-success text-white flex-1 md:flex-none shadow-sm"
+                        onClick={() =>
+                          handleAction(booking.bookingId, "ACCEPTED")
+                        }
+                        disabled={isProcessingThis}
+                      >
+                        {isProcessingThis ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <CheckCircle2 size={16} />
+                        )}
+                        Accept
+                      </button>
+                      <button
+                        className="btn btn-error btn-outline flex-1 md:flex-none shadow-sm"
+                        onClick={() =>
+                          handleAction(booking.bookingId, "DECLINED")
+                        }
+                        disabled={isProcessingThis}
+                      >
+                        {isProcessingThis ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <XCircle size={16} />
+                        )}
+                        Decline
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ) : (
+                // If not pending, show the provider's past message if it exists
+                booking.providerMessage && (
+                  <div className="mt-4">
+                    <p className="text-xs font-medium mb-1 opacity-60">
+                      Your Response
+                    </p>
+                    <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-base-content/20">
+                      {booking.providerMessage}
+                    </div>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -360,4 +520,4 @@ const HotelBookings = () => {
   );
 };
 
-export default HotelBookings;
+export default HotelBookingRequests;

@@ -1,9 +1,9 @@
 "use client";
 
-import HotelBookings from "@/components/traveller-booking/HotelBookings";
+import HotelBookings from "@/components/hotel-management/HotelBookings";
 import React, { useState } from "react";
 import { Hotel, Car, Map, History, LayoutDashboard } from "lucide-react";
-import BookingLegacy from "@/components/traveller-booking/BookingLegacy";
+import BookingLegacy from "@/components/experience-management/BookingLegacy";
 
 const BookingsPage = () => {
   const [activeTab, setActiveTab] = useState("hotels");
@@ -30,18 +30,7 @@ const BookingsPage = () => {
         {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <LayoutDashboard size={18} className="text-primary" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
-                Management Portal
-              </span>
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight">My Bookings</h1>
-            <p className="text-sm opacity-50 font-medium">
-              Manage your reservations and view upcoming travel itineraries.
-            </p>
+            <h1 className="font-bold tracking-tight">My Bookings</h1>
           </div>
 
           {/* Navigation Tabs */}
