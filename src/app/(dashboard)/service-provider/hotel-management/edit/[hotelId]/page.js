@@ -35,6 +35,7 @@ const EditHotel = ({ params }) => {
     featured: false,
     latitude: 0,
     longitude: 0,
+    discount: 0,
   });
 
   // Fetch existing hotel data
@@ -62,6 +63,7 @@ const EditHotel = ({ params }) => {
             featured: data.featured || false,
             latitude: data.latitude || 0,
             longitude: data.longitude || 0,
+            discount: data.discount || 0,
           });
         }
       } catch (error) {
@@ -282,6 +284,29 @@ const EditHotel = ({ params }) => {
                 step="0.01"
               />
             </div>
+          </div>
+          {/* discount */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text text-xs font-medium mb-1">
+                Discount (LKR)
+              </span>
+            </label>
+            <input
+              type="number"
+              className="input input-bordered w-full"
+              placeholder="0"
+              value={formData.discount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  discount: parseFloat(e.target.value) || 0,
+                })
+              }
+              required
+              min="0"
+              step="0.01"
+            />
           </div>
 
           <div className="divider"></div>

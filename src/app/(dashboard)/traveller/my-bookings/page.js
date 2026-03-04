@@ -1,130 +1,82 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { getMyBookings, cancelBooking } from "@/hooks/BookingApi";
-import BookingCard from "@/components/experience/BookingCard";
-import { CalendarCheck, Loader2 } from "lucide-react";
-import toast from "react-hot-toast";
 
-const statusTabs = ["ALL", "PENDING", "ACCEPTED", "DECLINED", "CANCELLED", "EXPIRED", "COMPLETED"];
+import HotelBookings from "@/components/traveller-booking/HotelBookings";
+import React, { useState } from "react";
+import { Hotel, Car, Map, History, LayoutDashboard } from "lucide-react";
+import BookingLegacy from "@/components/traveller-booking/BookingLegacy";
 
-const MyBookingsPage = () => {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("ALL");
+const BookingsPage = () => {
+  const [activeTab, setActiveTab] = useState("hotels");
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+  const tabs = [
+    { id: "hotels", label: "Hotels", icon: <Hotel size={16} /> },
+    { id: "transport", label: "Transport", icon: <Car size={16} /> },
+    { id: "experiences", label: "Experiences", icon: <Map size={16} /> },
+  ];
 
-  const fetchBookings = async () => {
-    try {
-      const data = await getMyBookings();
-      if (Array.isArray(data)) {
-        setBookings(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch bookings:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = async (bookingId) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
-    try {
-      const result = await cancelBooking(bookingId);
-      if (result?.bookingId) {
-        toast.success("Booking cancelled successfully");
-        fetchBookings();
-      } else {
-        toast.error(result?.message || "Failed to cancel booking");
-      }
-    } catch (err) {
-      toast.error("Something went wrong");
-    }
-  };
-
-  const filtered =
-    activeTab === "ALL"
-      ? bookings
-      : bookings.filter((b) => b.status === activeTab);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin" size={32} />
-      </div>
-    );
-  }
+  // Helper for placeholder sections
+  const ComingSoon = ({ label }) => (
+    <div className="bg-base-200/40 border-2 border-dashed border-base-300 rounded-[2.5rem] text-center">
+      <History className="mx-auto opacity-10" size={64} />
+      <p className="font-bold opacity-40 uppercase tracking-widest text-xs">
+        {label} Adventure Logs Coming Soon
+      </p>
+    </div>
+  );
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <CalendarCheck size={28} className="text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">My Bookings</h1>
-          <p className="text-sm text-base-content/60">
-            Track all your experience bookings
-          </p>
-        </div>
+    <div className="min-h-screen bg-base-100 text-base-content selection:bg-primary/10">
+      <div className="mx-auto px-4">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <LayoutDashboard size={18} className="text-primary" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                Management Portal
+              </span>
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight">My Bookings</h1>
+            <p className="text-sm opacity-50 font-medium">
+              Manage your reservations and view upcoming travel itineraries.
+            </p>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="inline-flex p-1.5 bg-base-200 border border-base-300 rounded-2xl">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-base-100 shadow-md text-primary scale-[1.02]"
+                    : "opacity-40 hover:opacity-100 hover:bg-base-100/50"
+                }`}
+              >
+                {tab.icon}
+                <span className="uppercase tracking-wider">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="min-h-[400px]">
+          {activeTab === "hotels" && <HotelBookings />}
+
+          {activeTab === "transport" && (
+            <p>Coming soon...</p>
+            // <ComingSoon label="Transport" />
+          )}
+
+          {activeTab === "experiences" && <BookingLegacy />}
+        </main>
       </div>
-
-      {/* Tabs */}
-      <div role="tablist" className="tabs tabs-boxed bg-base-200 w-fit">
-        {statusTabs.map((tab) => (
-          <button
-            key={tab}
-            role="tab"
-            className={`tab tab-sm ${activeTab === tab ? "tab-active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
-          </button>
-        ))}
-      </div>
-
-      {/* Count */}
-      <p className="text-sm text-base-content/50">
-        {filtered.length} booking{filtered.length !== 1 ? "s" : ""}
-      </p>
-
-      {/* Bookings list */}
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((booking) => (
-            <BookingCard
-              key={booking.bookingId}
-              booking={booking}
-              actions={
-                booking.status === "PENDING" ? (
-                  <button
-                    className="btn btn-error btn-xs"
-                    onClick={() => handleCancel(booking.bookingId)}
-                  >
-                    Cancel
-                  </button>
-                ) : null
-              }
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <CalendarCheck
-            size={48}
-            className="mx-auto text-base-content/20 mb-4"
-          />
-          <h3 className="text-lg font-medium">No bookings found</h3>
-          <p className="text-sm text-base-content/50 mt-1">
-            {activeTab === "ALL"
-              ? "You haven't made any bookings yet"
-              : `No ${activeTab.toLowerCase()} bookings`}
-          </p>
-        </div>
-      )}
     </div>
   );
 };
 
-export default MyBookingsPage;
+export default BookingsPage;

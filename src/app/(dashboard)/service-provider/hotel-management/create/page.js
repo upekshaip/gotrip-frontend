@@ -23,6 +23,7 @@ const CreateHotel = () => {
     featured: false,
     latitude: 0,
     longitude: 0,
+    discount: 0,
   });
 
   const handleSubmit = async (e) => {
@@ -63,11 +64,11 @@ const CreateHotel = () => {
       imageUrl: "",
       priceUnit: "PER_DAY",
       price: 0,
-      isFeatured: false,
+      featured: false,
       latitude: 0,
       longitude: 0,
+      discount: 0,
     });
-    setSelectedPricePlans([]);
   };
 
   const handleLocationChange = (coords) => {
@@ -224,6 +225,29 @@ const CreateHotel = () => {
                 step="0.01"
               />
             </div>
+          </div>
+          {/* discount */}
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text text-xs font-medium mb-1">
+                Discount (LKR)
+              </span>
+            </label>
+            <input
+              type="number"
+              className="input input-bordered w-full"
+              placeholder="0"
+              value={formData.discount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  discount: parseFloat(e.target.value) || 0,
+                })
+              }
+              required
+              min="0"
+              step="0.01"
+            />
           </div>
 
           <div className="divider"></div>

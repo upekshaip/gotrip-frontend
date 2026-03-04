@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { normalizeSriLankaTime } from "@/function/normalize";
@@ -162,10 +163,7 @@ const HotelManagementTable = () => {
                     <div className="flex items-center gap-3">
                       <div className="avatar">
                         <div className="mask mask-squircle w-12 h-12 bg-base-200">
-                          {/* <img
-                            src={hotel.imageUrl || "/hotel-placeholder.png"}
-                            alt={hotel.name}
-                          /> */}
+                          <img src={hotel.imageUrl} alt={hotel.name} />
                         </div>
                       </div>
                       <div>
