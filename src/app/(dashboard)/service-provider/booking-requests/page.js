@@ -10,7 +10,7 @@ const BookingRequestsByProvider = () => {
 
   const tabs = [
     { id: "hotels", label: "Hotels", icon: <Hotel size={16} /> },
-    { id: "transport", label: "Transport", icon: <Car size={16} /> },
+    // { id: "transport", label: "Transport", icon: <Car size={16} /> },
     { id: "experiences", label: "Experiences", icon: <Map size={16} /> },
   ];
 
@@ -25,7 +25,7 @@ const BookingRequestsByProvider = () => {
   );
 
   return (
-    <div className="min-h-screen bg-base-100 text-base-content selection:bg-primary/10">
+    <div className="min-h-screen text-base-content selection:bg-primary/10">
       <div className="mx-auto px-4">
         {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">

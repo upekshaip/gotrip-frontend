@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -13,25 +12,22 @@ import {
   Users,
   Hash,
   AlertCircle,
-  Mail,
-  Phone,
-  User,
-  MessageSquare,
   Activity,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import UseFetch from "@/hooks/UseFetch";
 
-const ExperienceBookingRequests = () => {
+const ExperienceBookings = () => {
   const [bookings, setBookings] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0); // Starts at 0
+  const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  const [providerResponses, setProviderResponses] = useState({});
-  const [processingId, setProcessingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const observerTarget = useRef(null);
   const limit = 20;
@@ -43,16 +39,14 @@ const ExperienceBookingRequests = () => {
 
       const response = await UseFetch(
         "GET",
-        `/experience/booking/provider/all?page=${page}&limit=${limit}`,
+        `/experience/booking/my-bookings?page=${page}&limit=${limit}`,
       );
 
       if (response && response.content) {
         setBookings((prev) => {
           const newContent = response.content || [];
-          // Reset array if it's the first page (page 0)
           if (page === 0) return newContent;
 
-          // Track uniqueness by the nested bookingId
           const existingIds = new Set(
             prev.map((item) => item.booking.bookingId),
           );
@@ -67,8 +61,8 @@ const ExperienceBookingRequests = () => {
         throw new Error(response.message || "Failed to fetch");
       }
     } catch (err) {
-      console.error("Failed to load requests:", err);
-      toast.error("Could not sync incoming requests.");
+      console.error("Failed to load bookings:", err);
+      toast.error("Could not sync your bookings.");
     } finally {
       setIsLoadingInitial(false);
       setIsFetchingMore(false);
@@ -83,7 +77,6 @@ const ExperienceBookingRequests = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isFetchingMore && !isLoadingInitial) {
-          // For 0-indexed pages, the last page is totalPages - 1
           if (currentPage < totalPages - 1) {
             const next = currentPage + 1;
             setCurrentPage(next);
@@ -106,52 +99,31 @@ const ExperienceBookingRequests = () => {
     fetchBookings,
   ]);
 
-  const handleResponseChange = (bookingId, text) => {
-    setProviderResponses((prev) => ({
-      ...prev,
-      [bookingId]: text,
-    }));
-  };
-
-  const handleAction = async (bookingId, statusType) => {
-    const message = providerResponses[bookingId] || "";
-    setProcessingId(bookingId);
+  const confirmCancellation = async () => {
+    if (!cancellingId) return;
+    setIsCancelling(true);
 
     try {
-      const payload = {
-        message: message,
-        status: statusType,
-      };
-
       const response = await UseFetch(
-        "PATCH",
-        `/experience/booking/${bookingId}/respond`,
-        payload,
+        "DELETE",
+        `/experience/booking/${cancellingId}/cancel`,
       );
 
       if (response && !response.error && !response.timestamp) {
-        toast.success(`Booking ${statusType.toLowerCase()}ed successfully.`);
+        toast.success("Booking cancelled successfully.");
+        setCancellingId(null);
 
-        setProviderResponses((prev) => {
-          const newState = { ...prev };
-          delete newState[bookingId];
-          return newState;
-        });
-
-        // Reset and fetch page 0
         setBookings([]);
         setCurrentPage(0);
         fetchBookings(0);
       } else {
-        toast.error(
-          response.message || `Failed to ${statusType.toLowerCase()} booking.`,
-        );
+        toast.error(response.message || "Failed to cancel booking.");
       }
     } catch (error) {
       console.error(error);
       toast.error("An unexpected error occurred.");
     } finally {
-      setProcessingId(null);
+      setIsCancelling(false);
     }
   };
 
@@ -231,27 +203,20 @@ const ExperienceBookingRequests = () => {
       {isLoadingInitial && bookings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 min-h-[400px]">
           <Loader2 className="animate-spin mb-4 text-primary" size={40} />
-          <p className="text-xs font-bold uppercase tracking-widest opacity-50">
-            Loading Experiences...
-          </p>
         </div>
       ) : !isLoadingInitial && bookings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 bg-base-200/30 border-2 border-dashed border-base-200 rounded-[2rem]">
           <Inbox className="opacity-10 mb-4" size={64} />
-          <h3 className="text-lg font-bold">No requests found</h3>
+          <h3 className="text-lg font-bold">No bookings found</h3>
           <p className="text-sm opacity-50 mt-1">
-            You have no booking requests at the moment.
+            You haven&apos;t made any experience bookings yet.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {bookings.map((item, index) => {
-            // Destructure the new response layout
             const { booking, experience } = item;
-
             const statusStyle = getStatusStyles(booking.status);
-            const currentResponse = providerResponses[booking.bookingId] || "";
-            const isProcessingThis = processingId === booking.bookingId;
 
             return (
               <div
@@ -260,7 +225,6 @@ const ExperienceBookingRequests = () => {
                 className={`collapse collapse-arrow bg-base-100 border border-base-200 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md focus:shadow-md group`}
               >
                 <div className="collapse-title text-base font-medium p-4 pr-12 flex items-center gap-4">
-                  {/* Now mapping the dynamic image if available */}
                   <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-xl bg-base-200">
                     {experience?.imageUrl ? (
                       <img
@@ -280,9 +244,6 @@ const ExperienceBookingRequests = () => {
                       <h3 className="font-bold text-base truncate leading-none">
                         {booking.experienceTitle}
                       </h3>
-                      <span className="opacity-40 text-xs hidden md:inline">
-                        • {booking.contact?.name}
-                      </span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -399,116 +360,36 @@ const ExperienceBookingRequests = () => {
                     </div>
                   </div>
 
-                  {booking.contact && (
-                    <div className="mt-6 p-4 bg-base-200/30 border border-base-200 rounded-xl">
-                      <div className="flex items-center gap-2 opacity-60 mb-3">
-                        <User size={16} />
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          Guest Information
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="opacity-50 text-xs mb-1">Name</p>
-                          <p className="font-medium">{booking.contact.name}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail size={16} className="opacity-40" />
-                          <div className="truncate">
-                            <p className="opacity-50 text-xs mb-1">Email</p>
-                            <p className="font-medium truncate">
-                              {booking.contact.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone size={16} className="opacity-40" />
-                          <div>
-                            <p className="opacity-50 text-xs mb-1">Phone</p>
-                            <p className="font-medium">
-                              {booking.contact.phone}
-                            </p>
-                          </div>
-                        </div>
+                  {booking.providerMessage && (
+                    <div className="mt-4">
+                      <p className="text-xs font-medium mb-1 opacity-60">
+                        Message from Provider
+                      </p>
+                      <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-primary">
+                        {booking.providerMessage}
                       </div>
                     </div>
                   )}
 
-                  {booking.status === "PENDING" ? (
-                    <div className="mt-6 border-t border-base-200 pt-4">
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1">
-                          <label className="text-[10px] uppercase font-bold opacity-50 block mb-2 flex items-center gap-1">
-                            <MessageSquare size={12} /> Provider Response
-                          </label>
-                          <textarea
-                            className="textarea textarea-bordered w-full text-sm bg-base-200/20 focus:bg-base-100 min-h-[5rem]"
-                            placeholder="Add a message for the guest..."
-                            value={currentResponse}
-                            onChange={(e) =>
-                              handleResponseChange(
-                                booking.bookingId,
-                                e.target.value,
-                              )
-                            }
-                            disabled={isProcessingThis}
-                          />
-                        </div>
-
-                        <div className="flex flex-row md:flex-col gap-2 justify-end md:w-48">
-                          <button
-                            className="btn btn-success text-white flex-1 md:flex-none shadow-sm"
-                            onClick={() =>
-                              handleAction(booking.bookingId, "ACCEPTED")
-                            }
-                            disabled={isProcessingThis}
-                          >
-                            {isProcessingThis ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                              <CheckCircle2 size={16} />
-                            )}
-                            Accept
-                          </button>
-                          <button
-                            className="btn btn-error btn-outline flex-1 md:flex-none shadow-sm"
-                            onClick={() =>
-                              handleAction(booking.bookingId, "DECLINED")
-                            }
-                            disabled={isProcessingThis}
-                          >
-                            {isProcessingThis ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                              <XCircle size={16} />
-                            )}
-                            Decline
-                          </button>
-                        </div>
+                  {booking.declineReason && (
+                    <div className="mt-4">
+                      <p className="text-xs font-medium mb-1 opacity-60 text-error">
+                        Decline Reason
+                      </p>
+                      <div className="text-sm opacity-80 bg-error/5 p-3 rounded-lg border-l-2 border-error">
+                        {booking.declineReason}
                       </div>
                     </div>
-                  ) : (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {booking.providerMessage && (
-                        <div>
-                          <p className="text-xs font-medium mb-1 opacity-60">
-                            Your Response
-                          </p>
-                          <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-base-content/20">
-                            {booking.providerMessage}
-                          </div>
-                        </div>
-                      )}
-                      {booking.declineReason && (
-                        <div>
-                          <p className="text-xs font-medium mb-1 opacity-60 text-error">
-                            Decline Reason
-                          </p>
-                          <div className="text-sm opacity-80 bg-error/5 p-3 rounded-lg border-l-2 border-error">
-                            {booking.declineReason}
-                          </div>
-                        </div>
-                      )}
+                  )}
+
+                  {booking.status === "PENDING" && (
+                    <div className="mt-4 flex justify-end border-t border-base-200 pt-4">
+                      <button
+                        className="btn btn-outline btn-error btn-sm gap-2"
+                        onClick={() => setCancellingId(booking.bookingId)}
+                      >
+                        <Trash2 size={14} /> Cancel Booking
+                      </button>
                     </div>
                   )}
                 </div>
@@ -523,8 +404,47 @@ const ExperienceBookingRequests = () => {
           <Loader2 className="animate-spin text-primary opacity-50" size={24} />
         )}
       </div>
+
+      <dialog
+        className={`modal modal-bottom sm:modal-middle ${cancellingId ? "modal-open" : ""}`}
+      >
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-error flex items-center gap-2">
+            <AlertCircle size={20} /> Cancel Booking
+          </h3>
+          <p className="py-4 text-sm opacity-80">
+            Are you sure you want to cancel this booking request? This action
+            cannot be undone.
+          </p>
+          <div className="modal-action">
+            <button
+              className="btn btn-ghost"
+              onClick={() => setCancellingId(null)}
+              disabled={isCancelling}
+            >
+              No, keep it
+            </button>
+            <button
+              className="btn btn-error text-white min-w-[120px]"
+              onClick={confirmCancellation}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                "Yes, Cancel"
+              )}
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => !isCancelling && setCancellingId(null)}>
+            close
+          </button>
+        </form>
+      </dialog>
     </div>
   );
 };
 
-export default ExperienceBookingRequests;
+export default ExperienceBookings;
