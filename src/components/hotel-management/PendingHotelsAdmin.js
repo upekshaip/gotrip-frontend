@@ -137,7 +137,7 @@ const PendingHotelsAdmin = () => {
   return (
     <section className="section-container">
       <div className="flex flex-col">
-        <div className="sticky top-0 p-4 bg-base-100 border-b border-base-200 z-10">
+        <div className="p-4 bg-base-100 border-b border-base-200">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Building2 className="text-primary" /> Pending Hotel Approvals
           </h1>

@@ -6,6 +6,7 @@ import ProfileDetails from "./ProfileDetails";
 import { getUserData } from "@/hooks/UseUserInfo";
 import { normalizeRoles, normalizeSriLankaTime } from "@/function/normalize";
 import ProfileImage from "../reusable/ProfileImage";
+import ProfileCreateProvider from "./ProfileCreateProvider";
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
@@ -23,6 +24,7 @@ const ProfilePage = () => {
           role: normalizeRoles(user.role) || "traveller",
           createdAt: user.createdAt || "-",
         });
+        console.log(user);
       } finally {
         setLoading(false);
       }
@@ -82,6 +84,7 @@ const ProfilePage = () => {
         {/* Right Column: Detailed Info */}
         <div className="lg:col-span-2 space-y-4">
           <ProfileDetails />
+          <ProfileCreateProvider />
         </div>
       </div>
     </div>

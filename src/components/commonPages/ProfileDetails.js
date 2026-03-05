@@ -119,7 +119,7 @@ const ProfileDetails = () => {
   }
 
   return (
-    <div className="card bg-base-100 shadow-none border-b lg:border border-base-300 rounded-none lg:rounded-box">
+    <div className="card bg-base-100 shadow border-b lg:border border-base-300 rounded-none lg:rounded-box">
       <div className="card-body">
         <div className="flex justify-between items-center mb-6">
           <Topic Icon={User} title="Profile Details" />

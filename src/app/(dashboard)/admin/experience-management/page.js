@@ -121,7 +121,7 @@ const AdminExperienceManagement = () => {
   return (
     <section className="section-container">
       <div className="flex flex-col">
-        <div className="sticky top-0 p-4 bg-base-100 border-b border-base-200 z-10 flex flex-wrap items-center justify-between gap-4">
+        <div className="p-4 bg-base-100 border-b border-base-200 flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Compass className="text-primary" /> Experience Management
           </h1>
