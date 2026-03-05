@@ -86,7 +86,7 @@ const routes = {
       name: "Notifications",
       url: "/notifications",
       icon: <Bell className="h-4 w-4" />,
-      menu: true,
+      // menu: true,
       order: 2,
       group: 10,
     },

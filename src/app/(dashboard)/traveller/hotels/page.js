@@ -10,7 +10,7 @@ import DiscoveryHeader from "@/components/reusable/DiscoveryHeader";
 const HotelDiscovery = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0); // Starts strictly at 0
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -26,11 +26,26 @@ const HotelDiscovery = () => {
         "GET",
         `/hotel-service?page=${currPage}&limit=10`,
       );
+
       if (data && data.content) {
-        setHotels((prev) =>
-          isFirstLoad ? data.content : [...prev, ...data.content],
-        );
-        setHasMore(!data.last);
+        setHotels((prev) => {
+          if (isFirstLoad) return data.content;
+
+          // Filter duplicates for safety during strict mode / rapid scrolling
+          const existingIds = new Set(prev.map((h) => h.hotelId));
+          const uniqueNewContent = data.content.filter(
+            (h) => !existingIds.has(h.hotelId),
+          );
+          return [...prev, ...uniqueNewContent];
+        });
+
+        // Calculate hasMore using the new nested page object
+        if (data.page) {
+          // If the current page number is less than total pages - 1, we have more
+          setHasMore(data.page.number < data.page.totalPages - 1);
+        } else {
+          setHasMore(false);
+        }
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -39,12 +54,12 @@ const HotelDiscovery = () => {
     }
   }, []);
 
-  // Initial Load
+  // Initial Load (Fetch page 0)
   useEffect(() => {
-    fetchHotels(1, true);
+    fetchHotels(0, true);
   }, [fetchHotels]);
 
-  // 2. Observer Logic: Watch the Sentinel, not the last element
+  // 2. Observer Logic: Watch the Sentinel
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -155,14 +170,14 @@ const HotelDiscovery = () => {
                     <h3 className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors truncate">
                       {hotel.name}
                     </h3>
-                    <div className="flex items-center gap-1 mt-1">
+                    <div className="flex items-center gap-1 mt-1 shrink-0">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       <span className="text-xs font-black">4.8</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-base-content/40 text-[13px] font-medium">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {hotel.city}
+                  <div className="flex items-center gap-1.5 text-base-content/40 text-[13px] font-medium mt-1">
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{hotel.city}</span>
                   </div>
                 </div>
               </div>

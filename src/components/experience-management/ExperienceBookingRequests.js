@@ -488,7 +488,17 @@ const ExperienceBookingRequests = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="mt-4 grid grid-cols-1 gap-4">
+                      {booking.requestMessage && (
+                        <div>
+                          <p className="text-xs font-medium mb-1 opacity-60">
+                            Guest&apos;s Note
+                          </p>
+                          <div className="text-sm opacity-80 bg-error/5 p-3 rounded-lg border-l-2 border-primary">
+                            {booking.requestMessage}
+                          </div>
+                        </div>
+                      )}
                       {booking.providerMessage && (
                         <div>
                           <p className="text-xs font-medium mb-1 opacity-60">
@@ -496,16 +506,6 @@ const ExperienceBookingRequests = () => {
                           </p>
                           <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-base-content/20">
                             {booking.providerMessage}
-                          </div>
-                        </div>
-                      )}
-                      {booking.declineReason && (
-                        <div>
-                          <p className="text-xs font-medium mb-1 opacity-60 text-error">
-                            Decline Reason
-                          </p>
-                          <div className="text-sm opacity-80 bg-error/5 p-3 rounded-lg border-l-2 border-error">
-                            {booking.declineReason}
                           </div>
                         </div>
                       )}

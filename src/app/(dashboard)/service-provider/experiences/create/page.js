@@ -1,11 +1,12 @@
 "use client";
+
 import React, { useState } from "react";
 import ExperienceForm from "@/components/experience/ExperienceForm";
 import { createExperience } from "@/hooks/ExperienceApi";
-import { ArrowLeft, Plus } from "lucide-react";
-import Link from "next/link";
+import { Compass } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import SectionHeader from "@/components/reusable/SectionHeader";
 
 const CreateExperiencePage = () => {
   const router = useRouter();
@@ -29,31 +30,17 @@ const CreateExperiencePage = () => {
   };
 
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto">
-      {/* Back button */}
-      <Link
-        href="/service-provider/experiences"
-        className="btn btn-ghost btn-sm gap-1"
-      >
-        <ArrowLeft size={16} /> Back to Listings
-      </Link>
+    <div className="section-container">
+      <SectionHeader
+        icon={<Compass className="w-5 h-5" />}
+        title={"Create Experience"}
+      />
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Plus size={28} className="text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Create Experience</h1>
-          <p className="text-sm text-base-content/60">
-            Add a new tour, rental, or activity listing
-          </p>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="card bg-base-100 shadow-md border border-base-200">
-        <div className="card-body">
-          <ExperienceForm onSubmit={handleSubmit} loading={loading} />
-        </div>
+      {/* The ExperienceForm is now placed directly within the section-container 
+        to match the flat, card-less design of the CreateHotel form. 
+      */}
+      <div className="mt-4">
+        <ExperienceForm onSubmit={handleSubmit} loading={loading} />
       </div>
     </div>
   );

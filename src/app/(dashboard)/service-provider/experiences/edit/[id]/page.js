@@ -3,9 +3,9 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ExperienceForm from "@/components/experience/ExperienceForm";
 import { getExperienceById, updateExperience } from "@/hooks/ExperienceApi";
-import { ArrowLeft, Pencil, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { FileCog, Info } from "lucide-react";
 import toast from "react-hot-toast";
+import SectionHeader from "@/components/reusable/SectionHeader";
 
 const EditExperiencePage = () => {
   const params = useParams();
@@ -25,8 +25,8 @@ const EditExperiencePage = () => {
   const fetchExperience = async () => {
     try {
       const data = await getExperienceById(experienceId);
-      if (data?.experienceId) {
-        setExperience(data);
+      if (data?.experience) {
+        setExperience(data.experience);
       }
     } catch (err) {
       console.error("Failed to fetch experience:", err);
@@ -52,58 +52,41 @@ const EditExperiencePage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !experience) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin" size={32} />
+      <div className="flex items-center justify-center h-48">
+        <span className="loading loading-spinner text-primary"></span>
       </div>
     );
   }
 
-  if (!experience) {
+  if (!loading && !experience) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-bold">Experience not found</h2>
-        <Link
-          href="/service-provider/experiences"
-          className="btn btn-primary mt-4"
-        >
-          Back to Listings
-        </Link>
+      <div className="alert alert-error mt-4">
+        <div className="flex items-center gap-3">
+          <Info className="w-5 h-5" />
+          <span>Experience not found with the provided ID.</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto">
-      {/* Back button */}
-      <Link
-        href="/service-provider/experiences"
-        className="btn btn-ghost btn-sm gap-1"
-      >
-        <ArrowLeft size={16} /> Back to Listings
-      </Link>
+    <div className="section-container">
+      <SectionHeader
+        icon={<FileCog className="w-5 h-5" />}
+        title={"Edit Experience"}
+      />
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Pencil size={28} className="text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Edit Experience</h1>
-          <p className="text-sm text-base-content/60">
-            Update your experience listing details
-          </p>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="card bg-base-100 shadow-md border border-base-200">
-        <div className="card-body">
-          <ExperienceForm
-            initialData={experience}
-            onSubmit={handleSubmit}
-            loading={submitting}
-          />
-        </div>
+      {/* The ExperienceForm is placed directly within the section-container 
+        without the card wrapper to match the flat design of EditHotel. 
+      */}
+      <div className="mt-4">
+        <ExperienceForm
+          initialData={experience}
+          onSubmit={handleSubmit}
+          loading={submitting}
+        />
       </div>
     </div>
   );

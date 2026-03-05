@@ -360,12 +360,22 @@ const ExperienceBookings = () => {
                     </div>
                   </div>
 
+                  {booking.requestMessage && (
+                    <div className="mt-4">
+                      <p className="text-xs font-medium mb-1 opacity-60">
+                        Your Note
+                      </p>
+                      <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-primary">
+                        {booking.requestMessage}
+                      </div>
+                    </div>
+                  )}
                   {booking.providerMessage && (
                     <div className="mt-4">
                       <p className="text-xs font-medium mb-1 opacity-60">
                         Message from Provider
                       </p>
-                      <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-primary">
+                      <div className="text-sm opacity-80 bg-base-200/50 p-3 rounded-lg border-l-2 border-success">
                         {booking.providerMessage}
                       </div>
                     </div>

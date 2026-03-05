@@ -1,123 +1,182 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useEffect, useState } from "react";
-import { getMyListings, deleteExperience } from "@/hooks/ExperienceApi";
-import { normalizePrice } from "@/function/normalize";
+
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import UseFetch from "@/hooks/UseFetch";
+import { normalizePrice, normalizeSriLankaTime } from "@/function/normalize";
 import CategoryBadge from "@/components/experience/CategoryBadge";
-import {
-  Compass,
-  Loader2,
-  Plus,
-  Pencil,
-  Trash2,
-  MapPin,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Edit, MapPin, Trash2, AlertTriangle, Compass } from "lucide-react";
+import clsx from "clsx";
 import toast from "react-hot-toast";
 
 const SPExperiencesPage = () => {
+  const [loading, setLoading] = useState(false);
   const [experiences, setExperiences] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [availability, setAvailability] = useState(""); // "", "true", or "false"
+  const [page, setPage] = useState(1); // 🔹 Starts at 0
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    fetchListings();
-  }, []);
+  // 🔹 State for Deletion
+  const [expToDelete, setExpToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchListings = async () => {
+  const router = useRouter();
+  const observer = useRef();
+
+  const fetchExperiences = async (isFirstLoad = false, nextPage = 0) => {
+    if (loading) return;
+    setLoading(true);
+    const currentPage = isFirstLoad ? 1 : nextPage;
+    const params = new URLSearchParams();
+    params.append("page", currentPage.toString());
+    params.append("limit", "10");
+
+    // Pass availability boolean if a specific filter is selected
+    if (availability !== "") {
+      params.append("available", availability);
+    }
+
     try {
-      const data = await getMyListings();
-      if (Array.isArray(data)) {
-        setExperiences(data);
+      // Adjusted to standard REST pattern based on your hotel example.
+      // Update this endpoint path if your backend uses a different route!
+      const data = await UseFetch(
+        "GET",
+        `/experience/my-listings?${params.toString()}`,
+      );
+
+      if (data && !data.timestamp) {
+        const newExperiences = data.content || [];
+
+        setExperiences((prev) => {
+          if (isFirstLoad) return newExperiences;
+          // Filter duplicates for safety
+          const existingIds = new Set(prev.map((e) => e.experienceId));
+          const uniqueNewContent = newExperiences.filter(
+            (e) => !existingIds.has(e.experienceId),
+          );
+          return [...prev, ...uniqueNewContent];
+        });
+
+        // 🔹 Calculate hasMore using the top-level 'last' boolean from your JSON
+        setHasMore(!data.last);
+      } else {
+        toast.error("Failed to fetch experiences data.");
       }
-    } catch (err) {
-      console.error("Failed to fetch listings:", err);
+    } catch (error) {
+      toast.error("Error connecting to experience service.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this experience?")) return;
+  // 🔹 Delete Logic
+  const confirmDelete = async () => {
+    if (!expToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await deleteExperience(id);
-      toast.success("Experience deleted");
-      setExperiences((prev) => prev.filter((e) => e.experienceId !== id));
+      const res = await UseFetch(
+        "DELETE",
+        `/experience/delete/${expToDelete.experienceId}`,
+      );
+
+      // Checking if response is successful
+      if (res && !res.timestamp && !res.error) {
+        toast.success(`${expToDelete.title} has been removed.`);
+
+        // Remove from local state immediately for a fast UX
+        setExperiences((prev) =>
+          prev.filter((e) => e.experienceId !== expToDelete.experienceId),
+        );
+
+        // Close the modal
+        setExpToDelete(null);
+      } else {
+        toast.error(
+          "Failed to delete the experience. It might have active bookings.",
+        );
+      }
     } catch (err) {
-      toast.error("Failed to delete experience");
+      console.error("Delete Error:", err);
+      toast.error("An unexpected error occurred during deletion.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin" size={32} />
-      </div>
-    );
-  }
+  useEffect(() => {
+    setExperiences([]);
+    setPage(1); // 🔹 Reset to 1
+    setHasMore(true);
+    fetchExperiences(true);
+  }, [availability]);
+
+  const lastElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(async (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          await fetchExperiences(false, nextPage);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, page, fetchExperiences],
+  );
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Compass size={28} className="text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">My Experiences</h1>
-            <p className="text-sm text-base-content/60">
-              Manage your experience listings
-            </p>
+    <section className="section-container">
+      <div className="flex flex-col">
+        {/* Filter Section */}
+        <div className="sticky top-0 p-4 bg-base-100 border-b border-base-200 z-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1">
+              <select
+                className="select select-sm select-bordered"
+                onChange={(e) => setAvailability(e.target.value)}
+                value={availability}
+              >
+                <option value="">All Status</option>
+                <option value="true">Available</option>
+                <option value="false">Unavailable</option>
+              </select>
+            </div>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() =>
+                router.push("/service-provider/experiences/create")
+              }
+            >
+              Add New Experience
+            </button>
           </div>
         </div>
-        <Link
-          href="/service-provider/experiences/create"
-          className="btn btn-primary btn-sm gap-1"
-        >
-          <Plus size={16} /> Create New
-        </Link>
-      </div>
 
-      {/* Stats */}
-      <div className="stats shadow bg-base-100 border border-base-200">
-        <div className="stat">
-          <div className="stat-title">Total Listings</div>
-          <div className="stat-value text-primary">{experiences.length}</div>
-        </div>
-        <div className="stat">
-          <div className="stat-title">Available</div>
-          <div className="stat-value text-success">
-            {experiences.filter((e) => e.available).length}
-          </div>
-        </div>
-        <div className="stat">
-          <div className="stat-title">Unavailable</div>
-          <div className="stat-value text-error">
-            {experiences.filter((e) => !e.available).length}
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      {experiences.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="table table-zebra">
-            <thead>
+        {/* Table Section */}
+        <div className="overflow-x-auto bg-base-100">
+          <table className="table table-zebra w-full">
+            <thead className="bg-base-200">
               <tr>
                 <th>Experience</th>
-                <th>Category</th>
                 <th>Location</th>
-                <th>Price</th>
+                <th>Price Details</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th>Last Updated</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {experiences.map((exp) => (
-                <tr key={exp.experienceId}>
+              {experiences.map((exp, index) => (
+                <tr key={`${exp.experienceId}-${index}`}>
                   <td>
                     <div className="flex items-center gap-3">
                       <div className="avatar">
-                        <div className="w-10 h-10 rounded-lg bg-base-200 flex items-center justify-center">
+                        <div className="mask mask-squircle w-12 h-12 bg-base-200 flex items-center justify-center">
                           {exp.imageUrl ? (
                             <img
                               src={exp.imageUrl}
@@ -125,49 +184,73 @@ const SPExperiencesPage = () => {
                               className="object-cover"
                             />
                           ) : (
-                            <MapPin size={16} />
+                            <Compass className="w-6 h-6 opacity-30" />
                           )}
                         </div>
                       </div>
                       <div>
-                        <div className="font-medium text-sm">{exp.title}</div>
-                        <div className="text-xs text-base-content/50">
+                        <div className="font-bold flex items-center gap-2">
+                          {exp.title}
+                        </div>
+                        <div className="text-xs opacity-50 truncate max-w-[200px] flex items-center gap-2 mt-1">
+                          <CategoryBadge category={exp.category} />
                           {exp.type?.replace(/_/g, " ")}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <CategoryBadge category={exp.category} />
-                  </td>
-                  <td className="text-sm">{exp.location}</td>
-                  <td className="text-sm font-medium">
-                    {normalizePrice(exp.pricePerUnit)}
-                  </td>
-                  <td>
-                    {exp.available ? (
-                      <span className="badge badge-success badge-sm gap-1">
-                        <Eye size={10} /> Active
-                      </span>
-                    ) : (
-                      <span className="badge badge-error badge-sm gap-1">
-                        <EyeOff size={10} /> Inactive
-                      </span>
-                    )}
+                    <div className="flex flex-col text-xs">
+                      <span className="font-medium">{exp.location}</span>
+                      {exp.maxCapacity > 0 && (
+                        <span className="opacity-60 flex items-center gap-1 mt-1">
+                          Max {exp.maxCapacity} persons
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td>
-                    <div className="flex gap-1">
-                      <Link
-                        href={`/service-provider/experiences/edit/${exp.experienceId}`}
+                    <div className="flex flex-col">
+                      <span className="font-mono text-sm">
+                        {normalizePrice(exp.pricePerUnit)}
+                      </span>
+                      <span className="text-[10px] uppercase opacity-50">
+                        {exp.priceUnit?.replace("_", " ")}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      className={clsx(
+                        "badge badge-sm font-medium",
+                        exp.available ? "badge-success" : "badge-error",
+                      )}
+                    >
+                      {exp.available ? "Available" : "Unavailable"}
+                    </span>
+                  </td>
+                  <td className="text-xs">
+                    {exp.updatedAt
+                      ? normalizeSriLankaTime(exp.updatedAt)
+                      : "N/A"}
+                  </td>
+                  <td>
+                    <div className="flex justify-end gap-2">
+                      <button
                         className="btn btn-ghost btn-xs"
+                        onClick={() =>
+                          router.push(
+                            `/service-provider/experiences/edit/${exp.experienceId}`,
+                          )
+                        }
                       >
-                        <Pencil size={12} />
-                      </Link>
+                        <Edit className="w-4 h-4" />
+                      </button>
                       <button
                         className="btn btn-ghost btn-xs text-error"
-                        onClick={() => handleDelete(exp.experienceId)}
+                        onClick={() => setExpToDelete(exp)} // Open Modal
                       >
-                        <Trash2 size={12} />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -175,23 +258,71 @@ const SPExperiencesPage = () => {
               ))}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <Compass size={48} className="mx-auto text-base-content/20 mb-4" />
-          <h3 className="text-lg font-medium">No experiences yet</h3>
-          <p className="text-sm text-base-content/50 mt-1">
-            Create your first experience listing
-          </p>
-          <Link
-            href="/service-provider/experiences/create"
-            className="btn btn-primary btn-sm mt-4"
+
+          {/* 🔹 Sentinel with "Fin." logic */}
+          <div
+            ref={lastElementRef}
+            className="py-12 flex flex-col items-center justify-center min-h-[100px]"
           >
-            <Plus size={14} /> Create Experience
-          </Link>
+            {loading ? (
+              <span className="loading loading-dots loading-md text-primary"></span>
+            ) : (
+              !hasMore &&
+              experiences.length > 0 && (
+                <div className="flex flex-col items-center opacity-20 mt-4">
+                  <div className="h-px w-20 bg-base-content mb-4"></div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em]">
+                    Fin.
+                  </p>
+                </div>
+              )
+            )}
+            {!loading && experiences.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 text-center opacity-50">
+                <Compass size={32} className="mb-2" />
+                <p className="font-medium">No experiences found.</p>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* 🔹 DAISYUI CONFIRMATION MODAL */}
+      <div className={clsx("modal", expToDelete && "modal-open")}>
+        <div className="modal-box">
+          <div className="flex items-center gap-3 text-error mb-4">
+            <AlertTriangle className="w-5 h-5" />
+            <h3 className="font-bold text-base">Confirm Deletion</h3>
+          </div>
+          <p className="py-4 text-xs">
+            Are you sure you want to delete{" "}
+            <span className="font-bold">{expToDelete?.title}</span>? This action
+            cannot be undone and will remove the experience from the platform.
+          </p>
+          <div className="modal-action">
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => setExpToDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              className={clsx("btn btn-sm btn-error", isDeleting && "loading")}
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting.." : "Yes, Delete"}
+            </button>
+          </div>
+        </div>
+        {/* Click outside to close */}
+        <div
+          className="modal-backdrop"
+          onClick={() => !isDeleting && setExpToDelete(null)}
+        ></div>
+      </div>
+    </section>
   );
 };
 

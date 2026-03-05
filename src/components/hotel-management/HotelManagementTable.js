@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -14,7 +15,7 @@ const HotelManagementTable = () => {
   const [loading, setLoading] = useState(false);
   const [hotels, setHotels] = useState([]);
   const [status, setStatus] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); // 🔹 Starts at 0
   const [hasMore, setHasMore] = useState(true);
 
   // 🔹 State for Deletion
@@ -24,7 +25,7 @@ const HotelManagementTable = () => {
   const router = useRouter();
   const observer = useRef();
 
-  const fetchHotels = async (isFirstLoad = false, nextPage = 1) => {
+  const fetchHotels = async (isFirstLoad = false, nextPage = 0) => {
     if (loading) return;
     setLoading(true);
     const currentPage = isFirstLoad ? 1 : nextPage;
@@ -40,10 +41,23 @@ const HotelManagementTable = () => {
       );
       if (data && !data.timestamp) {
         const newHotels = data.content || [];
-        setHotels((prev) =>
-          isFirstLoad ? newHotels : [...prev, ...newHotels],
-        );
-        setHasMore(!data.last);
+
+        setHotels((prev) => {
+          if (isFirstLoad) return newHotels;
+          // Filter duplicates for safety
+          const existingIds = new Set(prev.map((h) => h.hotelId));
+          const uniqueNewContent = newHotels.filter(
+            (h) => !existingIds.has(h.hotelId),
+          );
+          return [...prev, ...uniqueNewContent];
+        });
+
+        // 🔹 Calculate hasMore using the nested page object
+        if (data.page) {
+          setHasMore(data.page.number < data.page.totalPages - 1);
+        } else {
+          setHasMore(false);
+        }
       } else {
         toast.error("Failed to fetch hotel data.");
       }
@@ -54,14 +68,12 @@ const HotelManagementTable = () => {
     }
   };
 
-  // 🔹 Delete Logic
   // 🔹 Delete Logic using /hotel-service/{id}
   const confirmDelete = async () => {
     if (!hotelToDelete) return;
 
     setIsDeleting(true);
     try {
-      // Corrected endpoint path: /hotel-service/{id}
       const res = await UseFetch(
         "DELETE",
         `/hotel-service/${hotelToDelete.hotelId}`,
@@ -93,9 +105,10 @@ const HotelManagementTable = () => {
 
   useEffect(() => {
     setHotels([]);
-    setPage(1);
+    setPage(0); // 🔹 Reset to 0
     setHasMore(true);
     fetchHotels(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const lastElementRef = useCallback(
@@ -111,7 +124,7 @@ const HotelManagementTable = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore, page],
+    [loading, hasMore, page, fetchHotels],
   );
 
   return (
@@ -243,12 +256,24 @@ const HotelManagementTable = () => {
               ))}
             </tbody>
           </table>
+
+          {/* 🔹 Sentinel with "Fin." logic */}
           <div
             ref={lastElementRef}
-            className="h-20 flex justify-center items-center"
+            className="py-12 flex flex-col items-center justify-center min-h-[100px]"
           >
-            {loading && (
+            {loading ? (
               <span className="loading loading-dots loading-md text-primary"></span>
+            ) : (
+              !hasMore &&
+              hotels.length > 0 && (
+                <div className="flex flex-col items-center opacity-20 mt-4">
+                  <div className="h-px w-20 bg-base-content mb-4"></div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em]">
+                    Fin.
+                  </p>
+                </div>
+              )
             )}
           </div>
         </div>
