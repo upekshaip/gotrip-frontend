@@ -303,7 +303,6 @@ const routes = {
       name: "Analytics",
       url: "/admin/analytics",
       icon: <BarChart3 className="h-4 w-4" />,
-      menu: true,
       order: 1,
       group: 4,
     },
