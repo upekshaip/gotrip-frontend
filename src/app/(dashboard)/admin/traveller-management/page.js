@@ -433,7 +433,6 @@ const AllTravellersPage = () => {
               <button
                 type="submit"
                 className="btn btn-primary btn-block rounded-xl"
-                loading={isUpdating}
                 disabled={isUpdating}
               >
                 {!isUpdating && <Save size={18} className="mr-2" />}{" "}
@@ -508,7 +507,6 @@ const AllTravellersPage = () => {
             <div className="modal-action">
               <button
                 type="submit"
-                loading={isUpdatingRole}
                 className="btn btn-secondary btn-block rounded-xl"
                 disabled={isUpdatingRole}
               >

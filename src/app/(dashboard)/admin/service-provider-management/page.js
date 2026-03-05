@@ -430,7 +430,6 @@ const AllServiceProvidersPage = () => {
             </div>
             <div className="modal-action pt-4">
               <button
-                loading={isUpdating}
                 type="submit"
                 className="btn btn-primary btn-block rounded-xl"
                 disabled={isUpdating}
@@ -500,7 +499,6 @@ const AllServiceProvidersPage = () => {
 
             <div className="modal-action">
               <button
-                loading={isUpdatingRole}
                 type="submit"
                 className="btn btn-secondary btn-block rounded-xl"
                 disabled={isUpdatingRole}
