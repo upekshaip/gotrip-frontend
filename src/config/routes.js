@@ -255,7 +255,7 @@ const routes = {
       name: "Dashboard",
       url: "/admin",
       icon: <LayoutDashboard className="h-4 w-4" />,
-      menu: true,
+      // menu: true,
       order: 1,
       group: 1,
     },
