@@ -214,6 +214,24 @@ const routes = {
       url: "/service-provider/hotel-management/edit/:hotelId",
       icon: <Edit className="h-4 w-4" />,
     },
+    restaurantManagement: {
+      name: "Restaurant Management",
+      url: "/service-provider/restaurant-management",
+      icon: <Coffee className="h-4 w-4" />,
+      menu: true,
+      order: 2,
+      group: 2,
+    },
+    createRestaurant: {
+      name: "Create Restaurant",
+      url: "/service-provider/restaurant-management/create",
+      icon: <Plus className="h-4 w-4" />,
+    },
+    editRestaurant: {
+      name: "Edit Restaurant",
+      url: "/service-provider/restaurant-management/edit/:restaurantId",
+      icon: <Edit className="h-4 w-4" />,
+    },
     transportManagement: {
       name: "Transport Management",
       url: "/service-provider/transport-management",

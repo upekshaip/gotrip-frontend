@@ -1,13 +1,12 @@
-"use client";
-
+import RestaurantManagementTable from "@/components/restaurant-management/RestaurantManagementTable";
 import React from "react";
 
-const RestaurantManagementPage = () => {
+const RestaurantManagement = () => {
   return (
-    <div className="p-8">
-      Restaurant management section (under construction).
+    <div>
+      <RestaurantManagementTable />
     </div>
   );
 };
 
-export default RestaurantManagementPage;
+export default RestaurantManagement;
