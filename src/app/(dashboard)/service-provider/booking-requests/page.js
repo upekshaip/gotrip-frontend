@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { Hotel, Car, Map, History, LayoutDashboard } from "lucide-react";
+import { Hotel, Car, Map, History, LayoutDashboard, Coffee } from "lucide-react";
 import ExperienceBookingRequests from "@/components/experience-management/ExperienceBookingRequests";
 import HotelBookingRequests from "@/components/hotel-management/HotelBookingRequests";
+import RestaurantBookingRequests from "@/components/restaurant-management/RestaurantBookingRequests";
 
 const BookingRequestsByProvider = () => {
   const [activeTab, setActiveTab] = useState("hotels");
 
   const tabs = [
     { id: "hotels", label: "Hotels", icon: <Hotel size={16} /> },
+    { id: "restaurants", label: "Restaurants", icon: <Coffee size={16} /> },
     // { id: "transport", label: "Transport", icon: <Car size={16} /> },
     { id: "experiences", label: "Experiences", icon: <Map size={16} /> },
   ];
@@ -55,6 +57,8 @@ const BookingRequestsByProvider = () => {
         {/* Main Content Area */}
         <main className="min-h-[400px]">
           {activeTab === "hotels" && <HotelBookingRequests />}
+
+          {activeTab === "restaurants" && <RestaurantBookingRequests />}
 
           {activeTab === "transport" && (
             <p>Coming soon...</p>

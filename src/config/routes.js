@@ -27,6 +27,8 @@ import {
   ClipboardList,
   Bike,
   Building2,
+  Music,
+  Coffee,
 } from "lucide-react";
 
 // Centralized route paths for students and teachers
@@ -135,8 +137,24 @@ const routes = {
       name: "Transport",
       url: "/traveller/transport",
       icon: <Bike className="h-4 w-4" />,
-      // menu: true,
+      menu: true,
       order: 4,
+      group: 1,
+    },
+    club: {
+      name: "Club Service",
+      url: "/traveller/clubs",
+      icon: <Music className="h-4 w-4" />,
+      menu: true,
+      order: 5,
+      group: 1,
+    },
+    restaurant: {
+      name: "Restaurant Service",
+      url: "/traveller/restaurants",
+      icon: <Coffee className="h-4 w-4" />,
+      menu: true,
+      order: 6,
       group: 1,
     },
     experiences: {
@@ -194,6 +212,24 @@ const routes = {
     editHotel: {
       name: "Edit Hotel",
       url: "/service-provider/hotel-management/edit/:hotelId",
+      icon: <Edit className="h-4 w-4" />,
+    },
+    restaurantManagement: {
+      name: "Restaurant Management",
+      url: "/service-provider/restaurant-management",
+      icon: <Coffee className="h-4 w-4" />,
+      menu: true,
+      order: 2,
+      group: 2,
+    },
+    createRestaurant: {
+      name: "Create Restaurant",
+      url: "/service-provider/restaurant-management/create",
+      icon: <Plus className="h-4 w-4" />,
+    },
+    editRestaurant: {
+      name: "Edit Restaurant",
+      url: "/service-provider/restaurant-management/edit/:restaurantId",
       icon: <Edit className="h-4 w-4" />,
     },
     transportManagement: {
@@ -255,7 +291,7 @@ const routes = {
       name: "Dashboard",
       url: "/admin",
       icon: <LayoutDashboard className="h-4 w-4" />,
-      menu: true,
+      // menu: true,
       order: 1,
       group: 1,
     },
@@ -287,8 +323,24 @@ const routes = {
       name: "Transport Management",
       url: "/admin/transport-management",
       icon: <Bike className="h-4 w-4" />,
-      // menu: true,
+      menu: true,
       order: 2,
+      group: 2,
+    },
+    clubManagement: {
+      name: "Club Service",
+      url: "/admin/club-management",
+      icon: <Music className="h-4 w-4" />,
+      menu: true,
+      order: 3,
+      group: 2,
+    },
+    restaurantManagement: {
+      name: "Restaurant Service",
+      url: "/admin/restaurant-management",
+      icon: <Coffee className="h-4 w-4" />,
+      menu: true,
+      order: 4,
       group: 2,
     },
     experienceManagement: {
