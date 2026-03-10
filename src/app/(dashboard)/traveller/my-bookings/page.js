@@ -1,16 +1,17 @@
 "use client";
 
 import HotelBookings from "@/components/hotel-management/HotelBookings";
+import ExperienceBookings from "@/components/experience-management/ExperienceBookings";
+import TransportBookingsList from "@/components/transport/TransportBookingsList"; 
 import React, { useState } from "react";
 import { Hotel, Car, Map, History, LayoutDashboard } from "lucide-react";
-import ExperienceBookings from "@/components/experience-management/ExperienceBookings";
 
 const BookingsPage = () => {
   const [activeTab, setActiveTab] = useState("hotels");
 
   const tabs = [
     { id: "hotels", label: "Hotels", icon: <Hotel size={16} /> },
-    // { id: "transport", label: "Transport", icon: <Car size={16} /> },
+    { id: "transport", label: "Transport", icon: <Car size={16} /> }, 
     { id: "experiences", label: "Experiences", icon: <Map size={16} /> },
   ];
 
@@ -56,10 +57,7 @@ const BookingsPage = () => {
         <main className="min-h-[400px]">
           {activeTab === "hotels" && <HotelBookings />}
 
-          {activeTab === "transport" && (
-            <p>Coming soon...</p>
-            // <ComingSoon label="Transport" />
-          )}
+          {activeTab === "transport" && <TransportBookingsList />}
 
           {activeTab === "experiences" && <ExperienceBookings />}
         </main>

@@ -30,34 +30,37 @@ export const deleteTransport = async (id) => {
 // ============ BOOKING ACTIONS ============
 
 export const createTransportBooking = async (data) => {
-  return await UseFetch("POST", "/transport-bookings/request", data);
+  return await UseFetch("POST", "/transport-service/bookings/request", data);
 };
 
 export const getMyTransportBookings = async () => {
   // For the Traveler to see their history
-  return await UseFetch("GET", "/transport-bookings/my-bookings");
+  return await UseFetch("GET", "/transport-service/bookings/my-bookings");
 };
 
 export const getIncomingTransportRequests = async () => {
   // For the Provider to see pending requests
-  return await UseFetch("GET", "/transport-bookings/provider-requests");
+  return await UseFetch("GET", "/transport-service/bookings/provider-requests");
 };
 
 export const respondToBooking = async (id, status, message) => {
   // status: ACCEPTED or DECLINED
-  return await UseFetch("PATCH", `/transport-bookings/${id}/respond?status=${status}&message=${message}`);
+  return await UseFetch("PATCH", `/transport-service/bookings/${id}/respond?status=${status}&message=${message}`);
 };
 
 export const markBookingCompleted = async (id) => {
-  return await UseFetch("PATCH", `/transport-bookings/${id}/complete`);
+  return await UseFetch("PATCH", `/transport-service/bookings/${id}/complete`);
+};
+export const cancelTransportBooking = async (id) => {
+  return await UseFetch("PATCH", `/transport-service/bookings/${id}/cancel`);
 };
 
 // ============ REVIEWS ============
 
 export const createTransportReview = async (data) => {
-  return await UseFetch("POST", "/transport-reviews", data);
+  return await UseFetch("POST", "/transport-service/reviews", data);
 };
 
 export const getVehicleReviews = async (transportId) => {
-  return await UseFetch("GET", `/transport-reviews/vehicle/${transportId}`);
+  return await UseFetch("GET", `/transport-service/reviews/vehicle/${transportId}`);
 };

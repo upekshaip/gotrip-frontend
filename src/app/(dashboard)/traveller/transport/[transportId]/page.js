@@ -118,7 +118,7 @@ const TransportReservation = ({ params }) => {
         requestMessage: bookingData.requestMessage || "Standard Booking",
       };
 
-      const response = await UseFetch("POST", "/transport-bookings/request", payload);
+      const response = await UseFetch("POST", "/transport-service/bookings/request", payload);
 
       if (response && !response.error && !response.timestamp) {
         toast.success("Ride request sent successfully!");

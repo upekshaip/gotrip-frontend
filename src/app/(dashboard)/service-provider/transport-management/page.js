@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { 
   getIncomingTransportRequests, 
   respondToBooking, 
-  createTransport 
+  createTransport,
+  markBookingCompleted
 } from "@/hooks/TransportApi";
 import { 
   Car, Calendar, MapPin, CheckCircle, XCircle, 
@@ -46,11 +47,22 @@ export default function TransportManagementPage() {
     setLoadingRequests(true);
     try {
       const data = await getIncomingTransportRequests();
-      if (data) {
+      
+      console.log("Backend Response:", data); // Helpful for debugging!
+
+      // Smart check: Ensure we only set an array to prevent .filter() crashes
+      if (Array.isArray(data)) {
         setRequests(data);
+      } else if (data && Array.isArray(data.content)) {
+        // If Spring Boot wraps the array in a pagination 'content' object
+        setRequests(data.content);
+      } else {
+        // Fallback for errors or empty states
+        setRequests([]); 
       }
     } catch (error) {
       toast.error("Failed to load booking requests");
+      setRequests([]); // Fallback to empty array on network error
     } finally {
       setLoadingRequests(false);
     }
@@ -68,7 +80,6 @@ export default function TransportManagementPage() {
       
       if (res && !res.error) {
         toast.success(`Booking ${newStatus.toLowerCase()} successfully!`);
-        // Remove the processed request from the list to update UI instantly
         setRequests(prev => prev.filter(req => req.booking.bookingId !== bookingId));
       } else {
         toast.error("Failed to update booking status");
@@ -86,16 +97,18 @@ export default function TransportManagementPage() {
     setIsSubmitting(true);
     try {
       const res = await createTransport(vehicleData);
-      if (res && !res.error) {
+      
+      // Checking for an error property from your UseFetch hook
+      if (res && !res.error && !res.status?.toString().startsWith('4') && !res.status?.toString().startsWith('5')) {
         toast.success("Vehicle published successfully!");
         setVehicleData({
           vehicleMake: "", vehicleModel: "", vehicleType: "Car",
           description: "", city: "", priceUnit: "PER_DAY",
           price: "", capacity: "", imageUrl: "", isFeatured: false
         });
-        setActiveTab("requests"); // Switch back to requests tab
+        setActiveTab("requests"); 
       } else {
-        toast.error("Failed to add vehicle");
+        toast.error(res?.message || res?.error || "Failed to add vehicle");
       }
     } catch (err) {
       toast.error("An error occurred while adding the vehicle");
@@ -135,7 +148,7 @@ export default function TransportManagementPage() {
         <div className="space-y-6">
           {loadingRequests ? (
             <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary size-10" /></div>
-          ) : requests.filter(r => r.booking.status === "PENDING").length === 0 ? (
+          ) : requests.filter(r => r.booking.status === "PENDING" || r.booking.status === "ACCEPTED").length === 0 ? (
             <div className="text-center py-20 bg-base-100 rounded-2xl border border-dashed border-base-300">
               <CheckCircle className="mx-auto size-16 text-success/40 mb-4" />
               <h3 className="text-xl font-bold">You're all caught up!</h3>
@@ -143,7 +156,7 @@ export default function TransportManagementPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {requests.filter(r => r.booking.status === "PENDING").map((req) => (
+              {requests.filter(r => r.booking.status === "PENDING" || r.booking.status === "ACCEPTED").map((req) => (
                 <div key={req.booking.bookingId} className="card bg-base-100 shadow-xl border border-base-200">
                   <div className="card-body p-6">
                     {/* Header: Traveler Info */}
@@ -204,21 +217,51 @@ export default function TransportManagementPage() {
 
                     {/* Action Buttons */}
                     <div className="card-actions justify-end mt-2 pt-4 border-t border-base-200 gap-3">
-                      <button 
-                        onClick={() => handleAction(req.booking.bookingId, "DECLINED")}
-                        disabled={processingId === req.booking.bookingId}
-                        className="btn btn-outline btn-error hover:!text-white flex-1 sm:flex-none"
-                      >
-                        <XCircle size={18} /> Decline
-                      </button>
-                      <button 
-                        onClick={() => handleAction(req.booking.bookingId, "ACCEPTED")}
-                        disabled={processingId === req.booking.bookingId}
-                        className="btn btn-primary flex-1 sm:flex-none"
-                      >
-                        {processingId === req.booking.bookingId ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle size={18} />} 
-                        Accept Ride
-                      </button>
+                      {req.booking.status === "PENDING" && (
+                        <>
+                          <button 
+                            onClick={() => handleAction(req.booking.bookingId, "DECLINED")}
+                            disabled={processingId === req.booking.bookingId}
+                            className="btn btn-outline btn-error hover:!text-white flex-1 sm:flex-none"
+                          >
+                            <XCircle size={18} /> Decline
+                          </button>
+                          <button 
+                            onClick={() => handleAction(req.booking.bookingId, "ACCEPTED")}
+                            disabled={processingId === req.booking.bookingId}
+                            className="btn btn-primary flex-1 sm:flex-none"
+                          >
+                            {processingId === req.booking.bookingId ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle size={18} />} 
+                            Accept Ride
+                          </button>
+                        </>
+                      )}
+                      
+                      {req.booking.status === "ACCEPTED" && (
+                        <button 
+                          onClick={async () => {
+                            setProcessingId(req.booking.bookingId);
+                            try {
+                              const res = await markBookingCompleted(req.booking.bookingId);
+                              if (res && !res.error) {
+                                toast.success("Ride marked as Completed!");
+                                fetchRequests(); 
+                              } else {
+                                toast.error("Failed to complete ride");
+                              }
+                            } catch(e) { 
+                              toast.error("Error completing ride"); 
+                            } finally {
+                              setProcessingId(null);
+                            }
+                          }}
+                          disabled={processingId === req.booking.bookingId}
+                          className="btn btn-info text-white flex-1 sm:flex-none"
+                        >
+                          {processingId === req.booking.bookingId ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle size={18} />} 
+                          Mark as Completed
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
