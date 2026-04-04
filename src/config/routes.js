@@ -137,9 +137,10 @@ const routes = {
       name: "Transport",
       url: "/traveller/transport",
       icon: <Bike className="h-4 w-4" />,
-      menu: true,
-      order: 4,
+      menu: true, 
+      order: 3,
       group: 1,
+      menu: true,
     },
     club: {
       name: "Club Service",
@@ -156,6 +157,7 @@ const routes = {
       menu: true,
       order: 6,
       group: 1,
+
     },
     experiences: {
       name: "Experiences",
@@ -236,7 +238,7 @@ const routes = {
       name: "Transport Management",
       url: "/service-provider/transport-management",
       icon: <Bike className="h-4 w-4" />,
-      // menu: true,
+      menu: true, 
       order: 2,
       group: 2,
     },
