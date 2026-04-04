@@ -70,7 +70,7 @@ const UseFetch = async (method, path, data) => {
     }
     return await response.json();
   } catch (err) {
-    console.error("Fetch error:", err);
+    console.log("Fetch error:", err);
     toast.error("An error occurred while fetching data. Please try again.");
     throw err;
   }
