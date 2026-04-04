@@ -157,7 +157,7 @@ const RestaurantReservation = ({ params }) => {
 
     try {
       const payload = {
-        hotelId: restaurant.restaurantId,
+        restaurantId: restaurant.restaurantId,
         personCount: bookingData.guests,
         startingDate: bookingData.checkInDate,
         startingTime: bookingData.checkInTime,

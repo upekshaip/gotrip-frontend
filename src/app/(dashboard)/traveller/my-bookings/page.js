@@ -20,7 +20,7 @@ const BookingsPage = () => {
   const tabs = [
     { id: "hotels", label: "Hotels", icon: <Hotel size={16} /> },
     { id: "transport", label: "Transport", icon: <Car size={16} /> },
-    // { id: "restaurants", label: "Restaurants", icon: <Coffee size={16} /> },
+    { id: "restaurants", label: "Restaurants", icon: <Coffee size={16} /> },
     { id: "experiences", label: "Experiences", icon: <Map size={16} /> },
   ];
 
