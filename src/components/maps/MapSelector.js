@@ -65,7 +65,7 @@ const MapSelector = ({ lat, lng, onChange }) => {
           fullscreenControl: false,
         }}
       >
-        {lat !== 0 && lng !== 0 && (
+        {lat && lng && lat !== 0 && lng !== 0 && (
           <Marker
             position={{ lat, lng }}
             draggable={true}
