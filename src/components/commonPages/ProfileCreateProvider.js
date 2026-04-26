@@ -37,7 +37,8 @@ const ProfileCreateProvider = () => {
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
-        const res = await UseFetch("GET", "/user/check-me");
+        const res = await UseFetch("GET", "/user/me");
+        console.log(res);
         if (res && !res.timestamp) {
           setUserStatus(res);
         }

@@ -13,54 +13,87 @@ import VerifyTransportModel from "./VerifyTransportModel";
 const PendingTransportsAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [transports, setTransports] = useState([]);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [verifyTransport, setVerifyTransport] = useState(null);
 
+  const pageRef = useRef(1);
+  const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
   const observer = useRef();
 
-  const fetchPendingTransports = async (isFirstLoad = false, nextPage = 1) => {
-    if (loading) return;
+  const fetchPendingTransports = useCallback(async (isFirstLoad = false) => {
+    if (loadingRef.current) return;
+
+    if (observer.current) observer.current.disconnect();
+
+    loadingRef.current = true;
     setLoading(true);
-    const currentPage = isFirstLoad ? 1 : nextPage;
+
+    if (isFirstLoad) {
+      pageRef.current = 1;
+    }
+
+    const currentPage = pageRef.current;
+
     try {
       const data = await UseFetch(
         "GET",
         `/transport-service/admin/pending?page=${currentPage}&limit=10`,
       );
+
       if (data && !data.timestamp) {
         const newContent = data.content || [];
         setTransports((prev) =>
           isFirstLoad ? newContent : [...prev, ...newContent],
         );
-        if (data.page) setHasMore(data.page.number < data.page.totalPages - 1);
+
+        const totalPages = data.page?.totalPages ?? data.totalPages;
+        const pageNumber = data.page?.number ?? data.number;
+
+        let more = false;
+
+        if (totalPages !== undefined && pageNumber !== undefined) {
+          more = pageNumber < totalPages - 1;
+        } else {
+          more = newContent.length === 10;
+        }
+
+        hasMoreRef.current = more;
+        setHasMore(more);
+
+        if (more) {
+          pageRef.current = currentPage + 1;
+        }
       }
     } catch (error) {
       toast.error("Error fetching pending transports.");
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPendingTransports(true);
   }, []);
 
-  const lastElementRef = useCallback(
+  const lastRowRef = useCallback(
     (node) => {
-      if (loading) return;
       if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(async (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          const nextPage = page + 1;
-          setPage(nextPage);
-          await fetchPendingTransports(false, nextPage);
+      if (!node) return;
+      observer.current = new IntersectionObserver((entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasMoreRef.current &&
+          !loadingRef.current
+        ) {
+          fetchPendingTransports(false);
         }
       });
-      if (node) observer.current.observe(node);
+      observer.current.observe(node);
     },
-    [loading, hasMore, page],
+    [fetchPendingTransports],
   );
 
   const executeStatusUpdate = async (transportId) => {
@@ -68,12 +101,14 @@ const PendingTransportsAdmin = () => {
     try {
       const res = await UseFetch(
         "PATCH",
-        `/transport-service/admin/${transportId}/approve`
+        `/transport-service/admin/${transportId}/approve`,
       );
 
       if (res && !res.timestamp && !res.error) {
         toast.success(`Transport has been approved and is now ACTIVE.`);
-        setTransports((prev) => prev.filter((t) => t.transportId !== transportId));
+        setTransports((prev) =>
+          prev.filter((t) => t.transportId !== transportId),
+        );
         setVerifyTransport(null);
       }
     } catch (err) {
@@ -111,61 +146,78 @@ const PendingTransportsAdmin = () => {
                   </td>
                 </tr>
               ) : (
-                transports.map((transport, index) => (
-                  <tr key={`${transport.transportId}-${index}`}>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <div className="mask mask-squircle w-12 h-12 bg-base-200">
-                          <img
-                            src={transport.imageUrl || "https://placehold.co/600x800?text=Vehicle"}
-                            className="object-cover h-full w-full"
-                          />
-                        </div>
-                        <div>
-                          <div className="font-bold">
-                            {transport.vehicleMake} {transport.vehicleModel}{" "}
-                            {transport.isFeatured && (
-                              <span className="badge badge-primary badge-xs">
-                                Featured
-                              </span>
-                            )}
+                transports.map((transport, index) => {
+                  const isLast = index === transports.length - 1;
+                  return (
+                    <tr
+                      key={`${transport.transportId}-${index}`}
+                      ref={isLast ? lastRowRef : null}
+                    >
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="mask mask-squircle w-12 h-12 bg-base-200">
+                            <img
+                              src={
+                                transport.imageUrl ||
+                                "https://placehold.co/600x800?text=Vehicle"
+                              }
+                              className="object-cover h-full w-full"
+                              alt={`${transport.vehicleMake} ${transport.vehicleModel}`}
+                            />
                           </div>
-                          <div className="text-[10px] opacity-50 flex items-center gap-1">
-                            <MapPin size={10} /> {transport.city}
+                          <div>
+                            <div className="font-bold">
+                              {transport.vehicleMake} {transport.vehicleModel}{" "}
+                              {transport.isFeatured && (
+                                <span className="badge badge-primary badge-xs">
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] opacity-50 flex items-center gap-1">
+                              <MapPin size={10} /> {transport.city}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="text-xs font-mono font-bold">
-                      LKR {(transport.price || 0).toLocaleString()} {transport.priceUnit === "PER_DAY" ? "/ day" : "/ km"}
-                    </td>
-                    <td>
-                      <span className="badge badge-sm font-bold badge-warning">
-                        {transport.status}
-                      </span>
-                    </td>
-                    <td className="text-xs">
-                      {normalizeSriLankaTime(transport.createdAt)}
-                    </td>
-                    <td className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          className="btn btn-ghost btn-xs text-secondary"
-                          onClick={() => setVerifyTransport(transport)}
-                          title="Verify"
-                        >
-                          <Activity size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="text-xs font-mono font-bold">
+                        LKR {(transport.price || 0).toLocaleString()}{" "}
+                        {transport.priceUnit === "PER_DAY" ? "/ day" : "/ km"}
+                      </td>
+                      <td>
+                        <span className="badge badge-sm font-bold badge-warning">
+                          {transport.status}
+                        </span>
+                      </td>
+                      <td className="text-xs">
+                        {normalizeSriLankaTime(transport.createdAt)}
+                      </td>
+                      <td className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            className="btn btn-ghost btn-xs text-secondary"
+                            onClick={() => setVerifyTransport(transport)}
+                            title="Verify"
+                          >
+                            <Activity size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
-          <div ref={lastElementRef} className="py-10 flex justify-center">
+
+          <div className="py-10 flex justify-center">
             {loading && (
               <span className="loading loading-dots text-primary"></span>
+            )}
+            {!hasMore && !loading && transports.length > 0 && (
+              <span className="text-xs opacity-40">
+                No more pending transports
+              </span>
             )}
           </div>
         </div>
