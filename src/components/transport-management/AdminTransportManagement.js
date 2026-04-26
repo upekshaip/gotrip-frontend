@@ -23,7 +23,6 @@ const AdminTransportManagement = () => {
   const fetchTransports = useCallback(async (isFirstLoad = false) => {
     if (loadingRef.current) return;
 
-    // Disconnect observer during fetch to prevent re-triggering
     if (observer.current) observer.current.disconnect();
 
     loadingRef.current = true;
@@ -40,18 +39,29 @@ const AdminTransportManagement = () => {
         "GET",
         `/transport-service/admin/all?page=${currentPage}&limit=10`,
       );
+
       if (data && !data.timestamp) {
         const newContent = data.content || [];
         setTransports((prev) =>
           isFirstLoad ? newContent : [...prev, ...newContent],
         );
-        if (data.page) {
-          const more = data.page.number < data.page.totalPages - 1;
-          hasMoreRef.current = more;
-          setHasMore(more);
-          if (more) {
-            pageRef.current = currentPage + 1;
-          }
+
+        const totalPages = data.page?.totalPages ?? data.totalPages;
+        const pageNumber = data.page?.number ?? data.number;
+
+        let more = false;
+
+        if (totalPages !== undefined && pageNumber !== undefined) {
+          more = pageNumber < totalPages - 1;
+        } else {
+          more = newContent.length === 10;
+        }
+
+        hasMoreRef.current = more;
+        setHasMore(more);
+
+        if (more) {
+          pageRef.current = currentPage + 1;
         }
       }
     } catch (error) {
@@ -82,7 +92,7 @@ const AdminTransportManagement = () => {
       observer.current.observe(node);
     },
     [fetchTransports],
-  ); // no hasMore dependency — use ref instead
+  );
 
   return (
     <section className="section-container">
